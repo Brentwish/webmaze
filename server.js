@@ -11,6 +11,7 @@ io.on('connection', function(socket){
   io.emit('user_connect', {data : 'a user connected'});
   socket.on('disconnect', function(){
     console.log('user disconnected');
+    io.emit('user_disconnect', {data : 'a user disconnected'});
   });
 });
 io.on('connection', function(socket){

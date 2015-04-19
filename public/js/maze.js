@@ -3,7 +3,7 @@ var socket = io();
     _.each(data.maze, function(row) {
       var tr = $('<tr>');
         _.each(row, function(tile) {
-          tr.append($('<td>').addClass(tile == 0 ? 'wall' : 'hall'));
+          tr.append($('<td>').addClass(tile.val == 0 ? 'wall' : 'hall'));
         });
       $('#maze').append(tr);
     });

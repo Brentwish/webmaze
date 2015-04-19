@@ -98,7 +98,8 @@ mazeObj.prototype.generate = function(edge_hole_tuples) {
         var corner_1 = this.maze[tile.y + y_diff][tile.x + 1];
         var corner_2 = this.maze[tile.y + y_diff][tile.x - 1];
       }
-      has_touching_corners = (corner_1.val == 1 || corner_2.val == 1);
+      has_touching_corners = ((corner_1.val == 1 || corner_2.val == 1) &&
+                              _.intersection(garenteed_halls, [corner_1, corner_2]).length == 0);
     }
 
     if (((touching_count == 1 && !has_touching_corners) || edges.length > 0) && !this.is_border_tile(tile)) {

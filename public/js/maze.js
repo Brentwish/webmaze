@@ -3,6 +3,19 @@ var socket = io();
 socket.on('maze_data', function(data) {
   var player_coord = data.start_pos;
   var maze = data.maze;
+  var update_player = function(tile) {
+    var old_player_td = $('#tile_id_' + String(player_coord.x) + '_' + String(player_coord.y));
+    var new_player_td = $('#tile_id_' + String(tile.x) + '_' + String(tile.y));
+    old_player_td.removeClass('player');
+    new_player_td.addClass('player');
+    player_coord.x = tile.x;
+    player_coord.y = tile.y;
+    socket.emit('coord_update', player_coord);
+  }
+
+  socket.on('player_update', function(data) {
+    update_player(data.position);
+  });
 
   _.each(data.maze, function(row) {
     var tr = $('<tr>');
@@ -19,14 +32,6 @@ socket.on('maze_data', function(data) {
   });
 
   $(window).keydown(function(e) {
-    function update_player(tile) {
-      var old_player_td = $('#tile_id_' + String(player_coord.x) + '_' + String(player_coord.y));
-      var new_player_td = $('#tile_id_' + String(tile.x) + '_' + String(tile.y));
-      old_player_td.removeClass('player');
-      new_player_td.addClass('player');
-      player_coord.x = tile.x;
-      player_coord.y = tile.y;
-    }
     var key = e.which;
     var x = player_coord.x
     var y = player_coord.y

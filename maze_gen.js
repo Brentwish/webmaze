@@ -74,7 +74,7 @@ mazeObj.prototype.generate = function(edge_hole_tuples) {
   var working_tiles = new Set();
   var first_edge = garenteed_halls[Math.floor(Math.random() * garenteed_halls.length)];
   garenteed_halls = _.without(garenteed_halls, first_edge);
-  _.each(this.surrounding_tiles(first_edge), function(t) {
+  _.each(_.reject(this.surrounding_tiles(first_edge), this.is_border_tile, this), function(t) {
     working_tiles.add(t);
   });
 
@@ -86,18 +86,33 @@ mazeObj.prototype.generate = function(edge_hole_tuples) {
     }, 0);
     var edges = _.intersection(garenteed_halls, tiles);
 
-    if ((touching_count == 1 || edges.length > 0) && !this.is_border_tile(tile)) {
+    var has_touching_corners = false;
+    var touching_tile = _.find(tiles, function(t) { return t.val == 1; });
+    if (touching_count == 1 && !this.is_border_tile(touching_tile)) {
+      var x_diff = tile.x - touching_tile.x;
+      var y_diff = tile.y - touching_tile.y;
+      if (y_diff == 0) {
+        var corner_1 = this.maze[tile.y + 1][tile.x + x_diff];
+        var corner_2 = this.maze[tile.y - 1][tile.x + x_diff];
+      } else {
+        var corner_1 = this.maze[tile.y + y_diff][tile.x + 1];
+        var corner_2 = this.maze[tile.y + y_diff][tile.x - 1];
+      }
+      has_touching_corners = (corner_1.val == 1 || corner_2.val == 1);
+    }
+
+    if (((touching_count == 1 && !has_touching_corners) || edges.length > 0) && !this.is_border_tile(tile)) {
       tile.val = 1;
       garenteed_halls = _.difference(garenteed_halls, edges);
+      _.each(_.reject(tiles, this.is_border_tile, this), function(t) {
+        if (all_tiles.has(t)) {
+          working_tiles.add(t);
+          all_tiles.delete(t);
+        }
+      });
     } else {
       continue;
     }
-    _.each(tiles, function(t) {
-      if (all_tiles.has(t)) {
-        working_tiles.add(t);
-        all_tiles.delete(t);
-      }
-    });
   }
 }
 

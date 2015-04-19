@@ -22,7 +22,7 @@ io.on('connection', function(socket){
 
   console.log('a user connected');
   io.emit('user_connect', {data : 'a user connected'});
-  io.emit('maze_data', {maze: the_maze.maze});
+  io.emit('maze_data', {maze: the_maze.maze, start_pos: start, end_pos: end});
   socket.on('disconnect', function(){
     console.log('user disconnected');
     io.emit('user_disconnect', {data : 'a user disconnected'});

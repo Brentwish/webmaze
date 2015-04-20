@@ -12,7 +12,7 @@ var players = {};
 var the_maze = new maze_gen.mazeObj(maze_size_x, maze_size_y);
 var start = the_maze.get_random_edge();
 var end = the_maze.get_random_edge();
-the_maze.generate(start, [end]);
+the_maze.generate(start, [end], 3);
 
 app.use("/public", express.static(__dirname + '/public'));
 
@@ -31,7 +31,7 @@ io.on('connection', function(socket){
     position: start
   };
   socket.emit('maze_data', {
-    maze: the_maze.maze,
+    maze: the_maze,
     player_data: players,
     id: socket.id
   });
@@ -50,7 +50,7 @@ io.on('connection', function(socket){
         the_maze = new maze_gen.mazeObj(maze_size_x, maze_size_y);
         start = the_maze.get_random_edge();
         end = the_maze.get_random_edge();
-        the_maze.generate(start, [end]);
+        the_maze.generate(start, [end], 3);
 
         //Reset the player data
         _.each(players, function(player_data, player_id) {
@@ -61,7 +61,7 @@ io.on('connection', function(socket){
         //Send the new maze to each of the players
         _.each(io.sockets.connected, function(socket) {
           socket.emit('maze_data', {
-            maze: the_maze.maze,
+            maze: the_maze,
             player_data: players,
             id: socket.id
           });

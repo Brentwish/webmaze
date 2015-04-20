@@ -4,6 +4,13 @@ function tileObj(x, y, val) {
   this.x = x;
   this.y = y;
   this.val = val;
+  this.is_teleport_tile = false;
+  this.teleport_partner = null;
+  this.pair_id = null;
+}
+
+tileObj.prototype.same_coords = function(coords) {
+  return this.x == coords.x && this.y == coords.y;
 }
 
 tileObj.prototype.toString = function() {
@@ -13,6 +20,7 @@ tileObj.prototype.toString = function() {
 function mazeObj(width, height) {
   this.width = width;
   this.height = height;
+  this.teleport_tiles = [];
   this.maze = new Array();
   for (i = 0; i < height; i++) {
     this.maze[i] = new Array();
@@ -47,11 +55,23 @@ mazeObj.prototype.set_of_all_tiles = function() {
   return all_tiles;
 }
 
+mazeObj.prototype.all_halls = function() {
+  var all_halls = [];
+  _.each(this.maze, function(row) {
+    _.each(row, function(tile) {
+      if (tile.val == 1) {
+        all_halls.push(tile);
+      }
+    });
+  });
+  return all_halls;
+}
+
 mazeObj.prototype.is_border_tile = function(tile) {
   return tile.x == this.width - 1 || tile.x == 0 || tile.y == this.height - 1 || tile.y == 0;
 }
 
-mazeObj.prototype.generate = function(start, exits) {
+mazeObj.prototype.generate = function(start, exits, num_teleport_pairs) {
   Set.prototype.pop = function() {
     var i = Math.ceil((Math.random() * this.size));
     var iter = this.values();
@@ -130,6 +150,29 @@ mazeObj.prototype.generate = function(start, exits) {
       }
     }
   }, this);
+
+  //Generate teleports
+  var all_halls = this.all_halls();
+  for (i = 0; i < num_teleport_pairs; i++) {
+    if (all_halls.length >= 2) {
+      var t1 = all_halls[Math.floor(Math.random() * all_halls.length)];
+      all_halls = _.without(all_halls, t1);
+      t1.is_teleport_tile = true;
+
+      var t2 = all_halls[Math.floor(Math.random() * all_halls.length)];
+      all_halls = _.without(all_halls, t2);
+      t2.is_teleport_tile = true;
+
+      t1.pair_id = this.teleport_tiles.length;
+      t2.pair_id = this.teleport_tiles.length;
+
+      t1.teleport_partner = 1;
+      t2.teleport_partner = 0;
+      this.teleport_tiles.push([t1, t2]);
+    } else {
+      break;
+    }
+  }
 }
 
 mazeObj.prototype.is_valid_move = function(from, to) {
@@ -137,8 +180,12 @@ mazeObj.prototype.is_valid_move = function(from, to) {
   var is_valid_x = Math.abs(from.x - to.x) == 1 && Math.abs(from.y - to.y) == 0;
   var is_valid_y = Math.abs(from.x - to.x) == 0 && Math.abs(from.y - to.y) == 1;
   var is_hall = is_in_bounds ? this.maze[to.y][to.x].val == 1 : false;
+  var is_teleport_pair = _.any(this.teleport_tiles, function(pair) {
+    return (pair[0].same_coords(to) && pair[1].same_coords(from)) ||
+            (pair[0].same_coords(from) && pair[1].same_coords(to));
+  });
 
-  return is_hall && (is_valid_x || is_valid_y);
+  return is_hall && (is_valid_x || is_valid_y || is_teleport_pair);
 }
 
 mazeObj.prototype.print = function() {

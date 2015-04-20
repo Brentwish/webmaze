@@ -1,6 +1,7 @@
 var socket = io();
 var globals = {};
 
+globals.telport_colors = ["red", "orange", "yellow", "green", "blue", "purple"];
 globals.color_codes = {};
 globals.stringToColorCode = function(str) {
   if (str in globals.color_codes) {
@@ -27,10 +28,21 @@ socket.on('maze_data', function(data) {
   var players = data.player_data;
   var player_id = data.id;
   var update_players = function() {
+    //Clear the player fields
     $('#maze td.player')
       .removeClass('player')
       .removeAttr('style')
       .text('');
+
+    //Update the teleport tile colors
+    _.each(maze.teleport_tiles, function(pair) {
+      _.each(pair, function(t) {
+        $("#tile_id_" + String(t.x) + "_" + String(t.y))
+          .css('background-color', globals.telport_colors[t.pair_id]);
+      });
+    });
+
+    //Update the players
     _.each(players, function(player_data, player_id) {
       $('#tile_id_' + String(player_data.position.x) + '_' + String(player_data.position.y))
         .addClass('player')
@@ -38,6 +50,8 @@ socket.on('maze_data', function(data) {
         .css('color', globals.player_text_color(globals.stringToColorCode(player_id)))
         .text(player_data.win_count);
     });
+
+    //Re-update the current player so it is on top
     $('#tile_id_' + String(players[player_id].position.x) + '_' + String(players[player_id].position.y))
       .css('background-color', globals.stringToColorCode(player_id))
       .css('color', globals.player_text_color(globals.stringToColorCode(player_id)))
@@ -50,6 +64,15 @@ socket.on('maze_data', function(data) {
     socket.emit('coord_update', player_coord);
     players[player_id].position = player_coord;
     update_players();
+
+    if (tile.is_teleport_tile) {
+      var partner = maze.teleport_tiles[tile.pair_id][tile.teleport_partner]
+      player_coord.x = partner.x;
+      player_coord.y = partner.y;
+      socket.emit('coord_update', player_coord);
+      players[player_id].position = player_coord;
+      update_players();
+    }
   }
 
   var populate_maze = function(table, maze) {
@@ -60,6 +83,10 @@ socket.on('maze_data', function(data) {
           var td = $('<td>')
             .addClass(tile.val == 0 ? 'wall' : 'hall')
             .attr('id', 'tile_id_' + String(tile.x) + '_' + String(tile.y));
+
+          if (tile.is_teleport_tile) {
+            td.css('background-color', globals.telport_colors[tile.pair_id]);
+          }
           tr.append(td);
         });
       $(table).append(tr);
@@ -76,7 +103,7 @@ socket.on('maze_data', function(data) {
     update_players();
   });
 
-  populate_maze("#maze", data.maze);
+  populate_maze("#maze", data.maze.maze);
   update_players();
 
   $(window).off().on('keydown', function(e) {
@@ -88,8 +115,8 @@ socket.on('maze_data', function(data) {
     //down
     if (key == 40) {
       var new_y = player_coord.y + 1;
-      if (new_y < maze.length) {
-        var tile = maze[new_y][x];
+      if (new_y < maze.height) {
+        var tile = maze.maze[new_y][x];
         if (tile.val == 1) {
           update_position(tile);
         }
@@ -100,7 +127,7 @@ socket.on('maze_data', function(data) {
     else if (key == 38) {
       var new_y = player_coord.y - 1;
       if (new_y >= 0) {
-        var tile = maze[new_y][x];
+        var tile = maze.maze[new_y][x];
         if (tile.val == 1) {
           update_position(tile);
         }
@@ -110,8 +137,8 @@ socket.on('maze_data', function(data) {
     //right
     else if (key == 39) {
       var new_x = player_coord.x + 1;
-      if (new_x < maze[0].length) {
-        var tile = maze[y][new_x];
+      if (new_x < maze.width) {
+        var tile = maze.maze[y][new_x];
         if (tile.val == 1) {
           update_position(tile);
         }
@@ -122,7 +149,7 @@ socket.on('maze_data', function(data) {
     else if (key == 37) {
       var new_x = player_coord.x - 1;
       if (new_x >= 0) {
-        var tile = maze[y][new_x];
+        var tile = maze.maze[y][new_x];
         if (tile.val == 1) {
           update_position(tile);
         }

@@ -153,14 +153,14 @@ mazeObj.prototype.get_opposite_tile = function(old_tile) {
     tile.x = 0;
     tile.y = old_tile.y;
   } else if (old_tile.x == 0) {
-    tile.y = this.width - 1;
-    tile.x = old_tile.x;
+    tile.x = this.width - 1;
+    tile.y = old_tile.y;
   } else if (old_tile.y == this.height - 1) {
+    tile.x = old_tile.x;
     tile.y = 0;
-    tile.x = old_tile.x;
   } else if (old_tile.y == 0) {
-    tile.y = this.height - 1;
     tile.x = old_tile.x;
+    tile.y = this.height - 1;
   }
   return tile;
 }

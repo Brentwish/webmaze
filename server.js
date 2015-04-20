@@ -4,6 +4,12 @@ var http = require('http').Server(app);
 var io = require('socket.io')(http);
 var maze_gen = require('./maze_gen.js');
 
+var players = {};
+var start = {x: 1, y: 0}
+var end = {x: 24, y: 23}
+var the_maze = new maze_gen.mazeObj(25,25);
+the_maze.generate([start, end]);
+
 app.use("/public", express.static(__dirname + '/public'));
 
 app.get('/', function(req, res) {
@@ -15,24 +21,23 @@ app.get('/maze/', function(req, res) {
 });
 
 io.on('connection', function(socket){
-  var the_maze = new maze_gen.mazeObj(25,25);
-  var start = {x: 1, y: 0}
-  var end = {x: 24, y: 23}
-  var player_data = {position: start};
-  the_maze.generate([start, end]);
-
-  console.log('a user connected');
-  io.emit('user_connect', {data : 'a user connected'});
-  socket.emit('maze_data', {maze: the_maze.maze, start_pos: start, end_pos: end});
+  players[socket.id] = {id: socket.id, position: start};
+  socket.emit('maze_data', {maze: the_maze.maze, start_pos: start, end_pos: end, player_data: players, id: socket.id});
   socket.on('coord_update', function(player_coord){
+    var player_data = players[socket.id];
     if (player_data.position.x != player_coord.x || player_data.position.y != player_coord.y) {
       player_data.position = player_coord;
       io.emit('player_update', player_data);
+      players[socket.id] = player_data;
     }
   });
+
+  console.log('a user connected');
+  io.emit('user_connect', {data : 'a user connected'});
   socket.on('disconnect', function(){
+    delete players[socket.id];
     console.log('user disconnected');
-    io.emit('user_disconnect', {data : 'a user disconnected'});
+    io.emit('user_disconnect', {id: socket.id});
   });
 });
 

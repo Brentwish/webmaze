@@ -1,20 +1,28 @@
 var socket = io();
 
 socket.on('maze_data', function(data) {
-  var player_coord = data.start_pos;
   var maze = data.maze;
-  var update_player = function(tile) {
-    var old_player_td = $('#tile_id_' + String(player_coord.x) + '_' + String(player_coord.y));
-    var new_player_td = $('#tile_id_' + String(tile.x) + '_' + String(tile.y));
-    old_player_td.removeClass('player');
-    new_player_td.addClass('player');
+  var players = data.player_data;
+  var player_id = data.id;
+  var update_players = function() {
+    $('#maze td').removeClass('player');
+    _.each(players, function(player_data, player_id) {
+      var td = $('#tile_id_' + String(player_data.position.x) + '_' + String(player_data.position.y));
+      td.addClass('player');
+    });
+  }
+  var update_position = function(tile) {
+    var player_coord = players[player_id].position;
     player_coord.x = tile.x;
     player_coord.y = tile.y;
     socket.emit('coord_update', player_coord);
+    players[player_id].position = player_coord;
+    update_players();
   }
 
   socket.on('player_update', function(data) {
-    update_player(data.position);
+    players[data.id] = data;
+    update_players();
   });
 
   _.each(data.maze, function(row) {
@@ -33,6 +41,7 @@ socket.on('maze_data', function(data) {
 
   $(window).keydown(function(e) {
     var key = e.which;
+    var player_coord = players[player_id].position;
     var x = player_coord.x
     var y = player_coord.y
 
@@ -42,7 +51,7 @@ socket.on('maze_data', function(data) {
       if (new_y < maze.length) {
         var tile = maze[new_y][x];
         if (tile.val == 1) {
-          update_player(tile);
+          update_position(tile);
         }
       }
     }
@@ -53,7 +62,7 @@ socket.on('maze_data', function(data) {
       if (new_y >= 0) {
         var tile = maze[new_y][x];
         if (tile.val == 1) {
-          update_player(tile);
+          update_position(tile);
         }
       }
     }
@@ -64,7 +73,7 @@ socket.on('maze_data', function(data) {
       if (new_x < maze[0].length) {
         var tile = maze[y][new_x];
         if (tile.val == 1) {
-          update_player(tile);
+          update_position(tile);
         }
       }
     }
@@ -75,7 +84,7 @@ socket.on('maze_data', function(data) {
       if (new_x >= 0) {
         var tile = maze[y][new_x];
         if (tile.val == 1) {
-          update_player(tile);
+          update_position(tile);
         }
       }
     }

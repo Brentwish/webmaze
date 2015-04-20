@@ -5,9 +5,11 @@ var io = require('socket.io')(http);
 var maze_gen = require('./maze_gen.js');
 var _ = require('./public/js/underscore-min.js');
 
-var maze_size = 10;
+var maze_size_x = 10;
+var maze_size_y = 10;
 var players = {};
-var the_maze = new maze_gen.mazeObj(maze_size, maze_size);
+
+var the_maze = new maze_gen.mazeObj(maze_size_x, maze_size_y);
 var start = the_maze.get_random_edge();
 var end = the_maze.get_random_edge();
 the_maze.generate(start, [end]);
@@ -34,37 +36,41 @@ io.on('connection', function(socket){
     id: socket.id
   });
   io.emit('player_update', players[socket.id]);
-  socket.on('coord_update', function(player_coord){
+  socket.on('coord_update', function(player_coord) {
     var player_data = players[socket.id];
-    if (player_coord.x == end.x && player_coord.y == end.y) {
-      //Update the win count of the winning player
-      player_data.win_count++;
-      players[socket.id] = player_data;
+    //If we have a valid move
+    if (the_maze.is_valid_move(player_data.position, player_coord)) {
+      //If the new move is the winning move
+      if (player_coord.x == end.x && player_coord.y == end.y) {
+        //Update the win count of the winning player
+        player_data.win_count++;
+        players[socket.id] = player_data;
 
-      //Regenerate the maze
-      the_maze = new maze_gen.mazeObj(maze_size, maze_size);
-      start = the_maze.get_random_edge();
-      end = the_maze.get_random_edge();
-      the_maze.generate(start, [end]);
+        //Regenerate the maze
+        the_maze = new maze_gen.mazeObj(maze_size_x, maze_size_y);
+        start = the_maze.get_random_edge();
+        end = the_maze.get_random_edge();
+        the_maze.generate(start, [end]);
 
-      //Reset the player data
-      _.each(players, function(player_data, player_id) {
-        player_data.position = start;
-        players[player_id] = player_data;
-      });
-
-      //Send the new maze to each of the players
-      _.each(io.sockets.connected, function(socket) {
-        socket.emit('maze_data', {
-          maze: the_maze.maze,
-          player_data: players,
-          id: socket.id
+        //Reset the player data
+        _.each(players, function(player_data, player_id) {
+          player_data.position = start;
+          players[player_id] = player_data;
         });
-      });
-    } else if (player_data.position.x != player_coord.x || player_data.position.y != player_coord.y) {
-      player_data.position = player_coord;
-      io.emit('player_update', player_data);
-      players[socket.id] = player_data;
+
+        //Send the new maze to each of the players
+        _.each(io.sockets.connected, function(socket) {
+          socket.emit('maze_data', {
+            maze: the_maze.maze,
+            player_data: players,
+            id: socket.id
+          });
+        });
+      } else { //Normal position update
+        player_data.position = player_coord;
+        io.emit('player_update', player_data);
+        players[socket.id] = player_data;
+      }
     }
   });
 

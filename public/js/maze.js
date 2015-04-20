@@ -16,13 +16,19 @@ socket.on('maze_data', function(data) {
   var players = data.player_data;
   var player_id = data.id;
   var update_players = function() {
-    $('#maze td.player').removeClass('player').removeAttr('style');
+    $('#maze td.player')
+      .removeClass('player')
+      .removeAttr('style')
+      .text('');
     _.each(players, function(player_data, player_id) {
-      var td = $('#tile_id_' + String(player_data.position.x) + '_' + String(player_data.position.y));
-      td.addClass('player').css('background-color', globals.stringToColorCode(player_id));
+      $('#tile_id_' + String(player_data.position.x) + '_' + String(player_data.position.y))
+        .addClass('player')
+        .css('background-color', globals.stringToColorCode(player_id))
+        .text(player_data.win_count);
     });
-    var td = $('#tile_id_' + String(players[player_id].position.x) + '_' + String(players[player_id].position.y));
-    td.css('background-color', globals.stringToColorCode(player_id));
+    $('#tile_id_' + String(players[player_id].position.x) + '_' + String(players[player_id].position.y))
+      .css('background-color', globals.stringToColorCode(player_id))
+      .text(players[player_id].win_count);
   }
   var update_position = function(tile) {
     var player_coord = players[player_id].position;
@@ -41,9 +47,6 @@ socket.on('maze_data', function(data) {
           var td = $('<td>')
             .addClass(tile.val == 0 ? 'wall' : 'hall')
             .attr('id', 'tile_id_' + String(tile.x) + '_' + String(tile.y));
-          if (data.start_pos.x == tile.x && data.start_pos.y == tile.y) {
-            td.addClass('player');
-          }
           tr.append(td);
         });
       $(table).append(tr);

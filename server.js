@@ -23,12 +23,22 @@ app.get('/maze/', function(req, res) {
 });
 
 io.on('connection', function(socket){
-  players[socket.id] = {id: socket.id, position: start};
-  socket.emit('maze_data', {maze: the_maze.maze, start_pos: start, end_pos: end, player_data: players, id: socket.id});
+  players[socket.id] = {
+    id: socket.id,
+    win_count: 0,
+    position: start
+  };
+  socket.emit('maze_data', {
+    maze: the_maze.maze,
+    player_data: players,
+    id: socket.id
+  });
   io.emit('player_update', players[socket.id]);
   socket.on('coord_update', function(player_coord){
     var player_data = players[socket.id];
     if (player_coord.x == end.x && player_coord.y == end.y) {
+      player_data.win_count++;
+      players[socket.id] = player_data;
       _.each(players, function(player_data, player_id) {
         player_data.position = start;
         players[player_id] = player_data;
@@ -38,8 +48,6 @@ io.on('connection', function(socket){
       _.each(io.sockets.connected, function(socket) {
         socket.emit('maze_data', {
           maze: the_maze.maze,
-          start_pos: start,
-          end_pos: end,
           player_data: players,
           id: socket.id
         });

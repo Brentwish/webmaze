@@ -71,6 +71,11 @@ socket.on('maze_data', function(data) {
     update_players();
   });
 
+  socket.on('player_disconnect', function(data) {
+    delete players[data.id];
+    update_players();
+  });
+
   populate_maze("#maze", data.maze);
   update_players();
 

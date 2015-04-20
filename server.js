@@ -64,7 +64,7 @@ io.on('connection', function(socket){
   socket.on('disconnect', function(){
     delete players[socket.id];
     console.log('user disconnected');
-    io.emit('user_disconnect', {id: socket.id});
+    io.emit('player_disconnect', {id: socket.id});
   });
 });
 

@@ -58,7 +58,7 @@ socket.on('maze_data', function(data) {
   populate_maze("#maze", data.maze);
   update_players();
 
-  $(window).keydown(function(e) {
+  $(window).off().on('keydown', function(e) {
     var key = e.which;
     var player_coord = players[player_id].position;
     var x = player_coord.x

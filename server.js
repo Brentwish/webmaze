@@ -24,6 +24,7 @@ app.get('/maze/', function(req, res) {
 io.on('connection', function(socket){
   players[socket.id] = {id: socket.id, position: start};
   socket.emit('maze_data', {maze: the_maze.maze, start_pos: start, end_pos: end, player_data: players, id: socket.id});
+  io.emit('player_update', players[socket.id]);
   socket.on('coord_update', function(player_coord){
     var player_data = players[socket.id];
     if (player_coord.x == end.x && player_coord.y == end.y) {
@@ -33,7 +34,7 @@ io.on('connection', function(socket){
       });
       the_maze = new maze_gen.mazeObj(25,25);
       the_maze.generate([start, end]);
-      socket.emit('maze_data', {maze: the_maze.maze, start_pos: start, end_pos: end, player_data: players, id: socket.id});
+      io.emit('maze_data', {maze: the_maze.maze, start_pos: start, end_pos: end, player_data: players, id: socket.id});
     } else if (player_data.position.x != player_coord.x || player_data.position.y != player_coord.y) {
       player_data.position = player_coord;
       io.emit('player_update', player_data);

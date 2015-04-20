@@ -1,15 +1,28 @@
 var socket = io();
+var globals = {};
+
+globals.color_codes = {};
+globals.stringToColorCode = function(str) {
+  if (str in globals.color_codes) {
+    return globals.color_codes[str];
+  } else {
+    globals.color_codes[str] = '#'+ ('000000' + (Math.random()*0xFFFFFF<<0).toString(16)).slice(-6);
+    return globals.color_codes[str];
+  }
+}
 
 socket.on('maze_data', function(data) {
   var maze = data.maze;
   var players = data.player_data;
   var player_id = data.id;
   var update_players = function() {
-    $('#maze td').removeClass('player');
+    $('#maze td.player').removeClass('player').removeAttr('style');
     _.each(players, function(player_data, player_id) {
       var td = $('#tile_id_' + String(player_data.position.x) + '_' + String(player_data.position.y));
-      td.addClass('player');
+      td.addClass('player').css('background-color', globals.stringToColorCode(player_id));
     });
+    var td = $('#tile_id_' + String(players[player_id].position.x) + '_' + String(players[player_id].position.y));
+    td.css('background-color', globals.stringToColorCode(player_id));
   }
   var update_position = function(tile) {
     var player_coord = players[player_id].position;
@@ -20,24 +33,30 @@ socket.on('maze_data', function(data) {
     update_players();
   }
 
+  var populate_maze = function(table, maze) {
+    $(table).empty();
+    _.each(maze, function(row) {
+      var tr = $('<tr>');
+        _.each(row, function(tile) {
+          var td = $('<td>')
+            .addClass(tile.val == 0 ? 'wall' : 'hall')
+            .attr('id', 'tile_id_' + String(tile.x) + '_' + String(tile.y));
+          if (data.start_pos.x == tile.x && data.start_pos.y == tile.y) {
+            td.addClass('player');
+          }
+          tr.append(td);
+        });
+      $(table).append(tr);
+    });
+  }
+
   socket.on('player_update', function(data) {
     players[data.id] = data;
     update_players();
   });
 
-  _.each(data.maze, function(row) {
-    var tr = $('<tr>');
-      _.each(row, function(tile) {
-        var td = $('<td>')
-          .addClass(tile.val == 0 ? 'wall' : 'hall')
-          .attr('id', 'tile_id_' + String(tile.x) + '_' + String(tile.y));
-        if (data.start_pos.x == tile.x && data.start_pos.y == tile.y) {
-          td.addClass('player');
-        }
-        tr.append(td);
-      });
-    $('#maze').append(tr);
-  });
+  populate_maze("#maze", data.maze);
+  update_players();
 
   $(window).keydown(function(e) {
     var key = e.which;

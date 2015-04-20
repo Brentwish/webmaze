@@ -51,7 +51,7 @@ mazeObj.prototype.is_border_tile = function(tile) {
   return tile.x == this.width - 1 || tile.x == 0 || tile.y == this.height - 1 || tile.y == 0;
 }
 
-mazeObj.prototype.generate = function(edge_hole_tuples) {
+mazeObj.prototype.generate = function(start, exits) {
   Set.prototype.pop = function() {
     var i = Math.ceil((Math.random() * this.size));
     var iter = this.values();
@@ -65,16 +65,16 @@ mazeObj.prototype.generate = function(edge_hole_tuples) {
 
   var all_tiles = this.set_of_all_tiles();
   var garenteed_halls = [];
-  _.each(edge_hole_tuples, function(coord) {
+  _.each(exits, function(coord) {
     tile = this.maze[coord.y][coord.x];
     tile.val = 1;
     garenteed_halls.push(tile);
   }, this);
+  var start_tile = this.maze[start.y][start.x];
+  start_tile.val = 1;
 
   var working_tiles = new Set();
-  var first_edge = garenteed_halls[Math.floor(Math.random() * garenteed_halls.length)];
-  garenteed_halls = _.without(garenteed_halls, first_edge);
-  _.each(_.reject(this.surrounding_tiles(first_edge), this.is_border_tile, this), function(t) {
+  _.each(_.reject(this.surrounding_tiles(start_tile), this.is_border_tile, this), function(t) {
     working_tiles.add(t);
   });
 

@@ -10,7 +10,7 @@ var players = {};
 var start = {x: 1, y: 0}
 var end = {x: maze_size - 1, y: maze_size - 2}
 var the_maze = new maze_gen.mazeObj(maze_size, maze_size);
-the_maze.generate([start, end]);
+the_maze.generate(start, [end]);
 
 app.use("/public", express.static(__dirname + '/public'));
 
@@ -44,7 +44,7 @@ io.on('connection', function(socket){
         players[player_id] = player_data;
       });
       the_maze = new maze_gen.mazeObj(maze_size, maze_size);
-      the_maze.generate([start, end]);
+      the_maze.generate(start, [end]);
       _.each(io.sockets.connected, function(socket) {
         socket.emit('maze_data', {
           maze: the_maze.maze,

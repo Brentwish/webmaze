@@ -48,7 +48,7 @@ io.on('connection', function(socket){
 
         //Regenerate the maze
         the_maze = new maze_gen.mazeObj(maze_size_x, maze_size_y);
-        start = the_maze.get_random_edge();
+        start = the_maze.get_opposite_tile(end);
         end = the_maze.get_random_edge();
         the_maze.generate(start, [end]);
 

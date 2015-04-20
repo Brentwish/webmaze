@@ -5,11 +5,12 @@ var io = require('socket.io')(http);
 var maze_gen = require('./maze_gen.js');
 var _ = require('./public/js/underscore-min.js');
 
-var maze_size = 10;
+var maze_size_x = 10;
+var maze_size_y = 10;
 var players = {};
 var start = {x: 1, y: 0}
-var end = {x: maze_size - 1, y: maze_size - 2}
-var the_maze = new maze_gen.mazeObj(maze_size, maze_size);
+var end = {x: maze_size_x - 1, y: maze_size_y - 2}
+var the_maze = new maze_gen.mazeObj(maze_size_x, maze_size_y);
 the_maze.generate([start, end]);
 
 app.use("/public", express.static(__dirname + '/public'));
@@ -43,7 +44,7 @@ io.on('connection', function(socket){
         player_data.position = start;
         players[player_id] = player_data;
       });
-      the_maze = new maze_gen.mazeObj(maze_size, maze_size);
+      the_maze = new maze_gen.mazeObj(maze_size_x, maze_size_y);
       the_maze.generate([start, end]);
       _.each(io.sockets.connected, function(socket) {
         socket.emit('maze_data', {

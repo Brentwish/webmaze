@@ -132,6 +132,15 @@ mazeObj.prototype.generate = function(edge_hole_tuples) {
   }, this);
 }
 
+mazeObj.prototype.is_valid_move = function(from, to) {
+  var is_in_bounds = to.x >= 0 && to.y >= 0 && to.x < this.width && to.y < this.height;
+  var is_valid_x = Math.abs(from.x - to.x) == 1 && Math.abs(from.y - to.y) == 0;
+  var is_valid_y = Math.abs(from.x - to.x) == 0 && Math.abs(from.y - to.y) == 1;
+  var is_hall = is_in_bounds ? this.maze[to.y][to.x].val == 1 : false;
+
+  return is_hall && (is_valid_x || is_valid_y);
+}
+
 mazeObj.prototype.print = function() {
   return _.reduce(this.maze, function(m, row) {
     return m + (row.toString() + "\n");

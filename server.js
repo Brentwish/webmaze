@@ -35,28 +35,30 @@ io.on('connection', function(socket){
     id: socket.id
   });
   io.emit('player_update', players[socket.id]);
-  socket.on('coord_update', function(player_coord){
+  socket.on('coord_update', function(player_coord) {
     var player_data = players[socket.id];
-    if (player_coord.x == end.x && player_coord.y == end.y) {
-      player_data.win_count++;
-      players[socket.id] = player_data;
-      _.each(players, function(player_data, player_id) {
-        player_data.position = start;
-        players[player_id] = player_data;
-      });
-      the_maze = new maze_gen.mazeObj(maze_size_x, maze_size_y);
-      the_maze.generate([start, end]);
-      _.each(io.sockets.connected, function(socket) {
-        socket.emit('maze_data', {
-          maze: the_maze.maze,
-          player_data: players,
-          id: socket.id
+    if (the_maze.is_valid_move(player_data.position, player_coord)) {
+      if (player_coord.x == end.x && player_coord.y == end.y) {
+        player_data.win_count++;
+        players[socket.id] = player_data;
+        _.each(players, function(player_data, player_id) {
+          player_data.position = start;
+          players[player_id] = player_data;
         });
-      });
-    } else if (player_data.position.x != player_coord.x || player_data.position.y != player_coord.y) {
-      player_data.position = player_coord;
-      io.emit('player_update', player_data);
-      players[socket.id] = player_data;
+        the_maze = new maze_gen.mazeObj(maze_size_x, maze_size_y);
+        the_maze.generate([start, end]);
+        _.each(io.sockets.connected, function(socket) {
+          socket.emit('maze_data', {
+            maze: the_maze.maze,
+            player_data: players,
+            id: socket.id
+          });
+        });
+      } else {
+        player_data.position = player_coord;
+        io.emit('player_update', player_data);
+        players[socket.id] = player_data;
+      }
     }
   });
 

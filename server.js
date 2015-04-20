@@ -35,7 +35,15 @@ io.on('connection', function(socket){
       });
       the_maze = new maze_gen.mazeObj(maze_size, maze_size);
       the_maze.generate([start, end]);
-      io.emit('maze_data', {maze: the_maze.maze, start_pos: start, end_pos: end, player_data: players, id: socket.id});
+      _.each(io.sockets.connected, function(socket) {
+        socket.emit('maze_data', {
+          maze: the_maze.maze,
+          start_pos: start,
+          end_pos: end,
+          player_data: players,
+          id: socket.id
+        });
+      });
     } else if (player_data.position.x != player_coord.x || player_data.position.y != player_coord.y) {
       player_data.position = player_coord;
       io.emit('player_update', player_data);

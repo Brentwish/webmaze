@@ -138,4 +138,30 @@ mazeObj.prototype.print = function() {
   }, "");
 }
 
+mazeObj.prototype.get_random_edge = function(dir) {
+  dirs = ["right", "left", "top", "bottom"];
+  if (typeof dir == 'undefined' || !_.contains(dirs, dir)) {
+    dir = dirs[Math.floor(Math.random() * dirs.length)];
+  }
+  var x = -1;
+  var y = -1;
+  if (dir == "top") {
+    y = 0;
+  } else if (dir == "bottom") {
+    y = this.height - 1;
+  } else if (dir == "right") {
+    x = this.width - 1;
+  } else if (dir == "left") {
+    x = 0;
+  }
+
+  if (x == -1) {
+    x = Math.floor(Math.random() * (this.width - 2)) + 1;
+  } else if (y == -1) {
+    y = Math.floor(Math.random() * (this.height - 2)) + 1;
+  }
+
+  return {x: x, y: y};
+}
+
 exports.mazeObj = mazeObj;

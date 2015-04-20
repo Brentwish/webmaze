@@ -115,6 +115,21 @@ mazeObj.prototype.generate = function(edge_hole_tuples) {
       continue;
     }
   }
+
+  _.each(garenteed_halls, function(hall) {
+    var examined = new Set();
+    while (true) {
+      var sur_gar_tiles = _.reject(this.surrounding_tiles(hall), function(t) { return this.is_border_tile(t) || examined.has(t); }, this);
+      _.each(sur_gar_tiles, function(t) { examined.add(t); });
+      if (!_.any(sur_gar_tiles, function(t) { return t.val == 1; })) {
+        var t = sur_gar_tiles[Math.floor(Math.random() * sur_gar_tiles.length)];
+        t.val = 1;
+        hall = t;
+      } else {
+        break;
+      }
+    }
+  }, this);
 }
 
 mazeObj.prototype.print = function() {

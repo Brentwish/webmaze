@@ -10,6 +10,17 @@ globals.stringToColorCode = function(str) {
     return globals.color_codes[str];
   }
 }
+globals.player_text_color = function(color) {
+  var c = color.substring(1);      // strip #
+  var rgb = parseInt(c, 16);   // convert rrggbb to decimal
+  var r = (rgb >> 16) & 0xff;  // extract red
+  var g = (rgb >>  8) & 0xff;  // extract green
+  var b = (rgb >>  0) & 0xff;  // extract blue
+
+  var luma = 0.2126 * r + 0.7152 * g + 0.0722 * b; // per ITU-R BT.709
+
+  return luma < 180 ? "white" : "black";
+}
 
 socket.on('maze_data', function(data) {
   var maze = data.maze;
@@ -24,10 +35,12 @@ socket.on('maze_data', function(data) {
       $('#tile_id_' + String(player_data.position.x) + '_' + String(player_data.position.y))
         .addClass('player')
         .css('background-color', globals.stringToColorCode(player_id))
+        .css('color', globals.player_text_color(globals.stringToColorCode(player_id)))
         .text(player_data.win_count);
     });
     $('#tile_id_' + String(players[player_id].position.x) + '_' + String(players[player_id].position.y))
       .css('background-color', globals.stringToColorCode(player_id))
+      .css('color', globals.player_text_color(globals.stringToColorCode(player_id)))
       .text(players[player_id].win_count);
   }
   var update_position = function(tile) {

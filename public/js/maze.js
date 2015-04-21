@@ -1,159 +1,63 @@
 var socket = io();
-var globals = {};
-
-globals.telport_colors = ["red", "orange", "yellow", "green", "blue", "purple"];
-globals.color_codes = {};
-globals.stringToColorCode = function(str) {
-  if (str in globals.color_codes) {
-    return globals.color_codes[str];
-  } else {
-    globals.color_codes[str] = '#'+ ('000000' + (Math.random()*0xFFFFFF<<0).toString(16)).slice(-6);
-    return globals.color_codes[str];
-  }
-}
-globals.player_text_color = function(color) {
-  var c = color.substring(1);      // strip #
-  var rgb = parseInt(c, 16);   // convert rrggbb to decimal
-  var r = (rgb >> 16) & 0xff;  // extract red
-  var g = (rgb >>  8) & 0xff;  // extract green
-  var b = (rgb >>  0) & 0xff;  // extract blue
-
-  var luma = 0.2126 * r + 0.7152 * g + 0.0722 * b; // per ITU-R BT.709
-
-  return luma < 180 ? "white" : "black";
-}
+var maze = null;
 
 socket.on('maze_data', function(data) {
-  var maze = data.maze;
-  var players = data.player_data;
-  var player_id = data.id;
-  var update_players = function() {
-    //Clear the player fields
-    $('#maze td.player')
-      .removeClass('player')
-      .removeAttr('style')
-      .text('');
+  $.extend(data, {table: "#maze"});
+  maze = new clientMaze(data);
+  maze.draw_maze();
+  maze.draw_players();
+});
 
-    //Update the teleport tile colors
-    _.each(maze.teleport_tiles, function(pair) {
-      _.each(pair, function(t) {
-        $("#tile_id_" + String(t.x) + "_" + String(t.y))
-          .css('background-color', globals.telport_colors[t.pair_id]);
-      });
-    });
+socket.on('player_update', function(data) {
+  if (_.isNull(maze)) return; //Return if maze has yet to be created
+  maze.update_player(data.id, data);
+  maze.draw_players();
+});
 
-    //Update the players
-    _.each(players, function(player_data, player_id) {
-      $('#tile_id_' + String(player_data.position.x) + '_' + String(player_data.position.y))
-        .addClass('player')
-        .css('background-color', globals.stringToColorCode(player_id))
-        .css('color', globals.player_text_color(globals.stringToColorCode(player_id)))
-        .text(player_data.win_count);
-    });
+socket.on('player_disconnect', function(data) {
+  if (_.isNull(maze)) return; //Return if maze has yet to be created
+  maze.delete_player(data.id);
+  maze.draw_players();
+});
 
-    //Re-update the current player so it is on top
-    $('#tile_id_' + String(players[player_id].position.x) + '_' + String(players[player_id].position.y))
-      .css('background-color', globals.stringToColorCode(player_id))
-      .css('color', globals.player_text_color(globals.stringToColorCode(player_id)))
-      .text(players[player_id].win_count);
+$(window).off().on('keydown', function(e) {
+  var key = e.which;
+  if (_.isNull(maze)) return; //Return if maze has yet to be created
+  var player_coord = maze.get_current_player().position;
+  var x = player_coord.x
+  var y = player_coord.y
+
+  if (key == 40) { //down
+    var new_y = y + 1;
+    if (new_y < maze.height) {
+      var tile = maze.get_tile_at(x, new_y);
+      if (tile.val == 1) {
+        maze.update_position(tile);
+      }
+    }
+  } else if (key == 38) { //up
+    var new_y = player_coord.y - 1;
+    if (new_y >= 0) {
+      var tile = maze.get_tile_at(x, new_y);
+      if (tile.val == 1) {
+        maze.update_position(tile);
+      }
+    }
+  } else if (key == 39) { //right
+    var new_x = player_coord.x + 1;
+    if (new_x < maze.width) {
+      var tile = maze.get_tile_at(new_x, y);
+      if (tile.val == 1) {
+        maze.update_position(tile);
+      }
+    }
+  } else if (key == 37) { //left
+    var new_x = player_coord.x - 1;
+    if (new_x >= 0) {
+      var tile = maze.get_tile_at(new_x, y);
+      if (tile.val == 1) {
+        maze.update_position(tile);
+      }
+    }
   }
-  var update_position = function(tile) {
-    var player_coord = players[player_id].position;
-    player_coord.x = tile.x;
-    player_coord.y = tile.y;
-    socket.emit('coord_update', player_coord);
-    players[player_id].position = player_coord;
-    update_players();
-
-    if (tile.is_teleport_tile) {
-      var partner = maze.teleport_tiles[tile.pair_id][tile.teleport_partner]
-      player_coord.x = partner.x;
-      player_coord.y = partner.y;
-      socket.emit('coord_update', player_coord);
-      players[player_id].position = player_coord;
-      update_players();
-    }
-  }
-
-  var populate_maze = function(table, maze) {
-    $(table).empty();
-    _.each(maze, function(row) {
-      var tr = $('<tr>');
-        _.each(row, function(tile) {
-          var td = $('<td>')
-            .addClass(tile.val == 0 ? 'wall' : 'hall')
-            .attr('id', 'tile_id_' + String(tile.x) + '_' + String(tile.y));
-
-          if (tile.is_teleport_tile) {
-            td.css('background-color', globals.telport_colors[tile.pair_id]);
-          }
-          tr.append(td);
-        });
-      $(table).append(tr);
-    });
-  }
-
-  socket.on('player_update', function(data) {
-    players[data.id] = data;
-    update_players();
-  });
-
-  socket.on('player_disconnect', function(data) {
-    delete players[data.id];
-    update_players();
-  });
-
-  populate_maze("#maze", data.maze.maze);
-  update_players();
-
-  $(window).off().on('keydown', function(e) {
-    var key = e.which;
-    var player_coord = players[player_id].position;
-    var x = player_coord.x
-    var y = player_coord.y
-
-    //down
-    if (key == 40) {
-      var new_y = player_coord.y + 1;
-      if (new_y < maze.height) {
-        var tile = maze.maze[new_y][x];
-        if (tile.val == 1) {
-          update_position(tile);
-        }
-      }
-    }
-
-    //up
-    else if (key == 38) {
-      var new_y = player_coord.y - 1;
-      if (new_y >= 0) {
-        var tile = maze.maze[new_y][x];
-        if (tile.val == 1) {
-          update_position(tile);
-        }
-      }
-    }
-
-    //right
-    else if (key == 39) {
-      var new_x = player_coord.x + 1;
-      if (new_x < maze.width) {
-        var tile = maze.maze[y][new_x];
-        if (tile.val == 1) {
-          update_position(tile);
-        }
-      }
-    }
-
-    //left
-    else if (key == 37) {
-      var new_x = player_coord.x - 1;
-      if (new_x >= 0) {
-        var tile = maze.maze[y][new_x];
-        if (tile.val == 1) {
-          update_position(tile);
-        }
-      }
-    }
-  });
 });

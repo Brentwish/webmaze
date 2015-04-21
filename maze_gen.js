@@ -194,6 +194,24 @@ mazeObj.prototype.print = function() {
   }, "");
 }
 
+mazeObj.prototype.get_opposite_tile = function(old_tile) {
+  var tile = {};
+  if (old_tile.x == this.width - 1) {
+    tile.x = 0;
+    tile.y = old_tile.y;
+  } else if (old_tile.x == 0) {
+    tile.x = this.width - 1;
+    tile.y = old_tile.y;
+  } else if (old_tile.y == this.height - 1) {
+    tile.x = old_tile.x;
+    tile.y = 0;
+  } else if (old_tile.y == 0) {
+    tile.x = old_tile.x;
+    tile.y = this.height - 1;
+  }
+  return tile;
+}
+
 mazeObj.prototype.get_random_edge = function(dir) {
   dirs = ["right", "left", "top", "bottom"];
   if (typeof dir == 'undefined' || !_.contains(dirs, dir)) {

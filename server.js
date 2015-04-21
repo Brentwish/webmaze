@@ -14,6 +14,12 @@ var start = the_maze.get_random_edge();
 var end = the_maze.get_random_edge();
 the_maze.generate(start, [end], 3);
 
+console.log('New Maze generated');
+console.log('Size  : (' + maze_size_x + ', ' + maze_size_y + ')');
+console.log('Start : (' + start.x + ', ' + start.y + ')');
+console.log('End   : (' + end.x + ', ' + end.y + ')');
+console.log('Number of players: ' + Object.keys(players).length);
+
 app.use("/public", express.static(__dirname + '/public'));
 
 app.get('/', function(req, res) {
@@ -48,9 +54,15 @@ io.on('connection', function(socket){
 
         //Regenerate the maze
         the_maze = new maze_gen.mazeObj(maze_size_x, maze_size_y);
-        start = the_maze.get_random_edge();
+        start = the_maze.get_opposite_tile(end);
         end = the_maze.get_random_edge();
         the_maze.generate(start, [end], 3);
+
+        console.log('\nNew Maze generated');
+        console.log('Size  : (' + maze_size_x + ', ' + maze_size_y + ')');
+        console.log('Start : (' + start.x + ', ' + start.y + ')');
+        console.log('End   : (' + end.x + ', ' + end.y + ')');
+        console.log('Number of players: ' + Object.keys(players).length);
 
         //Reset the player data
         _.each(players, function(player_data, player_id) {
@@ -75,10 +87,12 @@ io.on('connection', function(socket){
   });
 
   console.log('a user connected');
+  console.log('Number of players: ' + Object.keys(players).length);
   io.emit('user_connect', {data : 'a user connected'});
   socket.on('disconnect', function(){
     delete players[socket.id];
     console.log('user disconnected');
+    console.log('Number of players: ' + Object.keys(players).length);
     io.emit('player_disconnect', {id: socket.id});
   });
 });

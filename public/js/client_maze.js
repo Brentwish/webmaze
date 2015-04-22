@@ -1,4 +1,6 @@
 function clientMaze(settings) {
+  this.table = settings.table;
+  this.player_id = settings.id;
   this.width = settings.maze.width;
   this.height = settings.maze.height;
   this.maze = settings.maze.maze;
@@ -7,34 +9,7 @@ function clientMaze(settings) {
   _.each(settings.player_data, function(player, id) {
     this.players[id] = new clientPlayer(player);
   }, this);
-  this.table = settings.table;
-  this.player_id = settings.id;
   this.teleport_colors = ["red", "orange", "yellow", "green", "blue", "purple"]; 
-}
-
-clientMaze.prototype.draw_players = function() {
-  //Clear the player fields
-  $('#maze td.player')
-    .removeClass('player')
-    .removeAttr('style')
-    .text('');
-
-  this.draw_teleports();
-
-  //Update the players
-  _.each(this.players, function(player, player_id) {
-    $("[name='" + player.current_tile_name() + "']")
-      .addClass('player')
-      .css('background-color', player.color)
-      .css('color', player.text_color)
-      .text(player.win_count);
-  }, this);
-
-  //Re-update the current player so it is on top
-  $("[name='" + this.get_current_player().current_tile_name() + "']")
-    .css('background-color', this.get_current_player().color)
-    .css('color', this.get_current_player().text_color)
-    .text(this.get_current_player().win_count);
 }
 
 clientMaze.prototype.draw_teleports = function() {
@@ -53,13 +28,13 @@ clientMaze.prototype.tile_name_from_position = function(pos) {
 
 clientMaze.prototype.update_position = function(tile) {
   socket.emit('coord_update', this.get_current_player().update_position(tile));
-  this.draw_players();
+  this.update_player_position(this.player_id);
 
   //Send second update if the tile we move into is a teleport
   if (tile.is_teleport_tile) {
     var partner = this.teleport_tiles[tile.pair_id][tile.teleport_partner]
     socket.emit('coord_update', this.get_current_player().update_position(partner));
-    this.draw_players();
+    this.update_player_position(this.player_id);
   }
 }
 
@@ -79,20 +54,27 @@ clientMaze.prototype.draw_maze = function() {
       },this);
     $(this.table).append(tr);
   }, this);
+  this.draw_teleports();
+  _.each(this.players, function(player, id) {
+    this.create_player_div(id);
+  }, this);
 }
 
 clientMaze.prototype.update_player = function(id, data) {
   var player = this.players[id];
   if (_.isUndefined(player)) {
     this.players[id] = new clientPlayer(data);
+    this.create_player_div(id);
   } else {
-    player.update_position(data.position);
     player.win_count = data.win_count;
+    player.update_position(data.position);
+    this.update_player_position(id);
   }
 }
 
 clientMaze.prototype.delete_player = function(id) {
   delete this.players[id];
+  $("#player_" + id).remove();
 }
 
 clientMaze.prototype.get_tile_at = function(x, y) {
@@ -101,4 +83,30 @@ clientMaze.prototype.get_tile_at = function(x, y) {
 
 clientMaze.prototype.get_current_player = function() {
   return this.players[this.player_id];
+}
+
+clientMaze.prototype.create_player_div = function(id) {
+  var player = this.players[id];
+  var div = $('<div>')
+    .addClass('player').attr('id', "player_" + id)
+    .css('background-color', player.color)
+    .css('color', player.text_color)
+    .text(player.win_count);
+  if (this.player_id == id) {
+    div.addClass('main_player');
+  }
+  $(this.table).append(div);
+  this.update_player_position(id);
+}
+
+clientMaze.prototype.update_player_position = function(id) {
+  var player_div = $("#player_" + id);
+  var player = this.players[id];
+  var table_pos = $(this.table).position();
+  var top = (player.position.y * 25) + table_pos.top + 1;
+  var left = (player.position.x * 25) + table_pos.left + 1;
+  player_div.css({
+    top: top,
+    left: left}
+  );
 }

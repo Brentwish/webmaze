@@ -2,22 +2,19 @@ var socket = io();
 var maze = null;
 
 socket.on('maze_data', function(data) {
-  $.extend(data, {table: "#maze"});
+  $.extend(data, {table: "#maze_table"});
   maze = new clientMaze(data);
   maze.draw_maze();
-  maze.draw_players();
 });
 
 socket.on('player_update', function(data) {
   if (_.isNull(maze)) return; //Return if maze has yet to be created
   maze.update_player(data.id, data);
-  maze.draw_players();
 });
 
 socket.on('player_disconnect', function(data) {
   if (_.isNull(maze)) return; //Return if maze has yet to be created
   maze.delete_player(data.id);
-  maze.draw_players();
 });
 
 $(window).off().on('keydown', function(e) {

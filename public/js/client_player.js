@@ -3,7 +3,7 @@ function clientPlayer(settings) {
   this.id = settings.id;
   this.position = settings.position;
   this.win_count = settings.win_count;
-  this.color = '#'+ ('000000' + (Math.random()*0xFFFFFF<<0).toString(16)).slice(-6); //random color
+  this.color = this.calc_player_color(this.id);
   this.text_color = (function(color) {
     var c = color.substring(1);      // strip #
     var rgb = parseInt(c, 16);   // convert rrggbb to decimal
@@ -26,3 +26,15 @@ clientPlayer.prototype.update_position = function(pos) {
   this.position.y = pos.y;
   return this.position;
 }
+
+clientPlayer.prototype.calc_player_color = (function() {
+  //Creates a closure by setting a variable then returning a function which
+  //will reference that variable. This creates the illusion of a static variable.
+  var player_colors = {};
+  return function(id) {
+    if (_.isUndefined(player_colors[id])) {
+      player_colors[id] = '#'+ ('000000' + (Math.random()*0xFFFFFF<<0).toString(16)).slice(-6);
+    }
+    return player_colors[id];
+  }
+})();

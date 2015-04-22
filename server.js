@@ -3,16 +3,20 @@ var app = express();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
 var maze_gen = require('./maze_gen.js');
+var npc = require('./npc.js');
 var _ = require('./public/js/underscore-min.js');
 
 var maze_size_x = 10;
 var maze_size_y = 10;
 var players = {};
+var npcs = [];
+//game tick function
 
 var the_maze = new maze_gen.mazeObj(maze_size_x, maze_size_y);
 var start = the_maze.get_random_edge();
 var end = the_maze.get_random_edge();
-the_maze.generate(start, [end], 3);
+the_maze.generate(start, [end], 6);
+npcs = the_maze.generate_npcs(5, end);
 
 console.log('New Maze generated');
 console.log('Size  : (' + maze_size_x + ', ' + maze_size_y + ')');
@@ -31,6 +35,9 @@ app.get('/maze/', function(req, res) {
 });
 
 io.on('connection', function(socket){
+  var game_tick = function() {
+    io.emit('npc_update', npcs);
+  }
   players[socket.id] = {
     id: socket.id,
     win_count: 0,
@@ -39,8 +46,11 @@ io.on('connection', function(socket){
   socket.emit('maze_data', {
     maze: the_maze,
     player_data: players,
+    npcs: npcs,
     id: socket.id
   });
+  setInterval(game_tick, 1000);
+  socket.on('npc_log', function(msg) {console.log(msg)});
   io.emit('player_update', players[socket.id]);
   socket.on('coord_update', function(player_coord) {
     var player_data = players[socket.id];
@@ -56,7 +66,8 @@ io.on('connection', function(socket){
         the_maze = new maze_gen.mazeObj(maze_size_x, maze_size_y);
         start = the_maze.get_opposite_tile(end);
         end = the_maze.get_random_edge();
-        the_maze.generate(start, [end], 3);
+        the_maze.generate(start, [end], 6);
+        npcs = the_maze.generate_npcs(5, end);
 
         console.log('\nNew Maze generated');
         console.log('Size  : (' + maze_size_x + ', ' + maze_size_y + ')');
@@ -75,6 +86,7 @@ io.on('connection', function(socket){
           socket.emit('maze_data', {
             maze: the_maze,
             player_data: players,
+            npcs: npcs,
             id: socket.id
           });
         });

@@ -12,6 +12,14 @@ socket.on('player_update', function(data) {
   maze.update_player(data.id, data);
 });
 
+socket.on('npc_update', function(npcs) {
+  if (_.isNull(maze)) return; //Return if maze has yet to be created
+  _.each(npcs, function(bot) {
+    maze.update_bots(bot);
+  });
+  socket.emit('npc_log', {msg: 'got it'});
+});
+
 socket.on('player_disconnect', function(data) {
   if (_.isNull(maze)) return; //Return if maze has yet to be created
   maze.delete_player(data.id);

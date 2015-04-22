@@ -1,4 +1,5 @@
 var _ = require('underscore');
+var npc = require('./npc.js');
 
 function tileObj(x, y, val) {
   this.x = x;
@@ -241,6 +242,16 @@ mazeObj.prototype.get_random_edge = function(dir) {
   }
 
   return {x: x, y: y};
+}
+
+mazeObj.prototype.generate_npcs = function(num_npcs, spawn) {
+  npcs = [];
+  for (i = 0; i < num_npcs; i++) {
+    var npc_settings = {id: i, position: spawn};
+    npcs.push(new npc.npcObj(npc_settings));
+  }
+  return npcs;
+  //return an array of bot objects
 }
 
 exports.mazeObj = mazeObj;

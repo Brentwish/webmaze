@@ -152,7 +152,12 @@ mazeObj.prototype.generate = function(start, exits, num_teleport_pairs) {
   }, this);
 
   //Generate teleports
-  var all_halls = this.all_halls();
+  var all_halls = _.reject(this.all_halls(), function(hall) {
+    var touching_count = _.reduce(this.surrounding_tiles(hall), function(m, t) {
+      return m + t.val;
+    }, 0);
+    return touching_count > 1 || this.is_border_tile(hall);
+  }, this);
   for (i = 0; i < num_teleport_pairs; i++) {
     if (all_halls.length >= 2) {
       var t1 = all_halls[Math.floor(Math.random() * all_halls.length)];

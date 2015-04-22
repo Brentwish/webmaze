@@ -17,7 +17,7 @@ socket.on('player_disconnect', function(data) {
   maze.delete_player(data.id);
 });
 
-$(window).off().on('keydown', function(e) {
+$(window).off('keydown').on('keydown', function(e) {
   var key = e.which;
   if (_.isNull(maze)) return; //Return if maze has yet to be created
   var player_coord = maze.get_current_player().position;
@@ -57,4 +57,7 @@ $(window).off().on('keydown', function(e) {
       }
     }
   }
+
+  e.preventDefault();
+  return false;
 });

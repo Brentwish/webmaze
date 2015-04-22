@@ -39,6 +39,7 @@ clientMaze.prototype.update_position = function(tile) {
 }
 
 clientMaze.prototype.draw_maze = function() {
+  //Clear the maze for redraw
   $(this.table).empty();
   _.each(this.maze, function(row) {
     var tr = $('<tr>');
@@ -54,7 +55,13 @@ clientMaze.prototype.draw_maze = function() {
       },this);
     $(this.table).append(tr);
   }, this);
+
+  //Make sure the table doesn't squish
+  $(this.table).css({'min-width': this.width * 25, 'min-height': this.height * 25});
+
   this.draw_teleports();
+
+  //Create a new div for each player
   _.each(this.players, function(player, id) {
     this.create_player_div(id);
   }, this);

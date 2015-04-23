@@ -110,7 +110,8 @@ clientMaze.prototype.create_player_div = function(id) {
 clientMaze.prototype.create_bot_div = function(id) {
   var npc = this.npcs[id]
   var div = $('<div>')
-    .addClass('npc_style').attr('id', "bot_" + id);
+    .addClass('npc_style').attr('id', "bot_" + id)
+    .text("☠");
   $(this.table).append(div);
 }
 

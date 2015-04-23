@@ -3,12 +3,14 @@ var app = express();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
 var maze_gen = require('./maze_gen.js');
+var npc = require('./npc.js');
 var _ = require('./public/js/underscore-min.js');
 
-var maze_size_x = 10;
-var maze_size_y = 10;
+var maze_size_x = 50;
+var maze_size_y = 20;
 var players = {};
 var num_teleporters = 6;
+var npcs = [];
 
 function create_maze(start, end) {
   var maze = new maze_gen.mazeObj({
@@ -18,6 +20,7 @@ function create_maze(start, end) {
     start: start,
     end: end
   });
+  npcs = maze.generate_npcs(5, maze.end);
 
   console.log('New Maze generated');
   console.log('Size  : (' + maze.width + ', ' + maze.height + ')');
@@ -40,6 +43,12 @@ app.get('/maze/', function(req, res) {
 });
 
 io.on('connection', function(socket){
+  var game_tick = function() {
+    _.each(npcs, function(npc) {
+      npc.get_next_move(the_maze);
+      io.emit('npc_update', npcs);
+    });
+  }
   players[socket.id] = {
     id: socket.id,
     win_count: 0,
@@ -48,8 +57,10 @@ io.on('connection', function(socket){
   socket.emit('maze_data', {
     maze: the_maze,
     player_data: players,
+    npcs: npcs,
     id: socket.id
   });
+  setInterval(game_tick, 0300);
   io.emit('player_update', players[socket.id]);
   socket.on('coord_update', function(player_coord) {
     var player_data = players[socket.id];
@@ -63,6 +74,7 @@ io.on('connection', function(socket){
 
         //Regenerate the maze
         the_maze = create_maze(the_maze.get_opposite_tile(the_maze.end))
+        npcs = the_maze.generate_npcs(5, the_maze.end);
 
         //Reset the player data
         _.each(players, function(player_data, player_id) {
@@ -75,6 +87,7 @@ io.on('connection', function(socket){
           socket.emit('maze_data', {
             maze: the_maze,
             player_data: players,
+            npcs: npcs,
             id: socket.id
           });
         });

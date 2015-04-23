@@ -6,6 +6,7 @@ function clientMaze(settings) {
   this.maze = settings.maze.maze;
   this.teleport_tiles = settings.maze.teleport_tiles;
   this.players = {};
+  this.npcs = settings.npcs;
   _.each(settings.player_data, function(player, id) {
     this.players[id] = new clientPlayer(player);
   }, this);
@@ -104,6 +105,30 @@ clientMaze.prototype.create_player_div = function(id) {
   }
   $(this.table).append(div);
   this.update_player_position(id);
+}
+
+clientMaze.prototype.create_bot_div = function(id) {
+  var npc = this.npcs[id]
+  var div = $('<div>')
+    .addClass('npc_style').attr('id', "bot_" + id);
+  $(this.table).append(div);
+}
+
+clientMaze.prototype.update_bots = function(bot) {
+  if ($("#bot_" + bot.id).length == 0) {
+    this.create_bot_div(bot.id);
+  }
+  var npc_div = $("#bot_" + bot.id);
+  var npc = this.npcs[bot.id];
+  npc.position = bot.position;
+  npc.direction = bot.direction;
+  var table_pos = $(this.table).position();
+  var top = (npc.position.y * 25) + table_pos.top + 1;
+  var left = (npc.position.x * 25) + table_pos.left + 1;
+  npc_div.css({
+    top: top,
+    left: left}
+  );
 }
 
 clientMaze.prototype.update_player_position = function(id) {

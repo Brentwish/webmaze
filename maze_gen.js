@@ -1,4 +1,5 @@
 var _ = require('underscore');
+var npc = require('./npc.js');
 
 function tileObj(x, y, val) {
   this.x = x;
@@ -7,6 +8,14 @@ function tileObj(x, y, val) {
   this.is_teleport_tile = false;
   this.teleport_partner = null;
   this.pair_id = null;
+}
+
+tileObj.prototype.is_hall = function() {
+  return this.val == 1;
+}
+
+tileObj.prototype.is_wall = function() {
+  return this.val == 0;
 }
 
 tileObj.prototype.same_coords = function(coords) {
@@ -58,6 +67,12 @@ mazeObj.prototype.surrounding_tiles = function(tile) {
   if (y != this.height - 1)
     sur_tiles.push(this.maze[y + 1][x]);
   return sur_tiles;
+}
+
+mazeObj.prototype.surrounding_halls = function(tile) {
+  return _.select(this.surrounding_tiles(tile), function(t) {
+    return t.is_hall();
+  });
 }
 
 mazeObj.prototype.set_of_all_tiles = function() {
@@ -257,6 +272,16 @@ mazeObj.prototype.get_random_edge = function(dir) {
   }
 
   return {x: x, y: y};
+}
+
+mazeObj.prototype.generate_npcs = function(num_npcs, spawn) {
+  npcs = [];
+  for (i = 0; i < num_npcs; i++) {
+    var npc_settings = {id: i, position: spawn};
+    npcs.push(new npc.npcObj(npc_settings));
+  }
+  return npcs;
+  //return an array of bot objects
 }
 
 exports.mazeObj = mazeObj;

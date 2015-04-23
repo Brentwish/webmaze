@@ -10,6 +10,14 @@ function tileObj(x, y, val) {
   this.pair_id = null;
 }
 
+tileObj.prototype.is_hall = function() {
+  return this.val == 1;
+}
+
+tileObj.prototype.is_wall = function() {
+  return this.val == 0;
+}
+
 tileObj.prototype.same_coords = function(coords) {
   return this.x == coords.x && this.y == coords.y;
 }
@@ -44,6 +52,12 @@ mazeObj.prototype.surrounding_tiles = function(tile) {
   if (y != this.height - 1)
     sur_tiles.push(this.maze[y + 1][x]);
   return sur_tiles;
+}
+
+mazeObj.prototype.surrounding_halls = function(tile) {
+  return _.select(this.surrounding_tiles(tile), function(t) {
+    return t.is_hall();
+  });
 }
 
 mazeObj.prototype.set_of_all_tiles = function() {

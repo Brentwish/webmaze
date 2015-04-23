@@ -6,8 +6,8 @@ var maze_gen = require('./maze_gen.js');
 var npc = require('./npc.js');
 var _ = require('./public/js/underscore-min.js');
 
-var maze_size_x = 10;
-var maze_size_y = 10;
+var maze_size_x = 50;
+var maze_size_y = 20;
 var players = {};
 var npcs = [];
 //game tick function
@@ -36,7 +36,10 @@ app.get('/maze/', function(req, res) {
 
 io.on('connection', function(socket){
   var game_tick = function() {
-    io.emit('npc_update', npcs);
+    _.each(npcs, function(npc) {
+      npc.get_next_move(the_maze);
+      io.emit('npc_update', npcs);
+    });
   }
   players[socket.id] = {
     id: socket.id,
@@ -49,8 +52,7 @@ io.on('connection', function(socket){
     npcs: npcs,
     id: socket.id
   });
-  setInterval(game_tick, 1000);
-  socket.on('npc_log', function(msg) {console.log(msg)});
+  setInterval(game_tick, 0300);
   io.emit('player_update', players[socket.id]);
   socket.on('coord_update', function(player_coord) {
     var player_data = players[socket.id];

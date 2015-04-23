@@ -120,6 +120,8 @@ clientMaze.prototype.update_bots = function(bot) {
   }
   var npc_div = $("#bot_" + bot.id);
   var npc = this.npcs[bot.id];
+  npc.position = bot.position;
+  npc.direction = bot.direction;
   var table_pos = $(this.table).position();
   var top = (npc.position.y * 25) + table_pos.top + 1;
   var left = (npc.position.x * 25) + table_pos.left + 1;

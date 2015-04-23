@@ -17,7 +17,6 @@ socket.on('npc_update', function(npcs) {
   _.each(npcs, function(bot) {
     maze.update_bots(bot);
   });
-  socket.emit('npc_log', {msg: 'got it'});
 });
 
 socket.on('player_disconnect', function(data) {

@@ -8,17 +8,26 @@ var _ = require('./public/js/underscore-min.js');
 var maze_size_x = 10;
 var maze_size_y = 10;
 var players = {};
+var num_teleporters = 6;
 
-var the_maze = new maze_gen.mazeObj(maze_size_x, maze_size_y);
-var start = the_maze.get_random_edge();
-var end = the_maze.get_random_edge();
-the_maze.generate(start, [end], 3);
+function create_maze(start, end) {
+  var maze = new maze_gen.mazeObj({
+    width: maze_size_x,
+    height: maze_size_y,
+    num_teleporters: num_teleporters,
+    start: start,
+    end: end
+  });
 
-console.log('New Maze generated');
-console.log('Size  : (' + maze_size_x + ', ' + maze_size_y + ')');
-console.log('Start : (' + start.x + ', ' + start.y + ')');
-console.log('End   : (' + end.x + ', ' + end.y + ')');
-console.log('Number of players: ' + Object.keys(players).length);
+  console.log('New Maze generated');
+  console.log('Size  : (' + maze.width + ', ' + maze.height + ')');
+  console.log('Start : (' + maze.start.x + ', ' + maze.start.y + ')');
+  console.log('End   : (' + maze.end.x + ', ' + maze.end.y + ')');
+  console.log('Number of players: ' + Object.keys(players).length);
+  return maze;
+}
+
+var the_maze = create_maze();
 
 app.use("/public", express.static(__dirname + '/public'));
 
@@ -34,7 +43,7 @@ io.on('connection', function(socket){
   players[socket.id] = {
     id: socket.id,
     win_count: 0,
-    position: start
+    position: the_maze.start
   };
   socket.emit('maze_data', {
     maze: the_maze,
@@ -47,26 +56,17 @@ io.on('connection', function(socket){
     //If we have a valid move
     if (the_maze.is_valid_move(player_data.position, player_coord)) {
       //If the new move is the winning move
-      if (player_coord.x == end.x && player_coord.y == end.y) {
+      if (player_coord.x == the_maze.end.x && player_coord.y == the_maze.end.y) {
         //Update the win count of the winning player
         player_data.win_count++;
         players[socket.id] = player_data;
 
         //Regenerate the maze
-        the_maze = new maze_gen.mazeObj(maze_size_x, maze_size_y);
-        start = the_maze.get_opposite_tile(end);
-        end = the_maze.get_random_edge();
-        the_maze.generate(start, [end], 3);
-
-        console.log('\nNew Maze generated');
-        console.log('Size  : (' + maze_size_x + ', ' + maze_size_y + ')');
-        console.log('Start : (' + start.x + ', ' + start.y + ')');
-        console.log('End   : (' + end.x + ', ' + end.y + ')');
-        console.log('Number of players: ' + Object.keys(players).length);
+        the_maze = create_maze(the_maze.get_opposite_tile(the_maze.end))
 
         //Reset the player data
         _.each(players, function(player_data, player_id) {
-          player_data.position = start;
+          player_data.position = the_maze.start;
           players[player_id] = player_data;
         });
 

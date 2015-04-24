@@ -35,7 +35,7 @@ npcObj.prototype.get_next_move = function(maze) {
         if (this.last_position.x == t.x && this.last_position.y == t.y) {
           return t;
         }
-      }, this), this);
+      }, this));
       next_move = surrounding_halls[i];
     } else {
     //if the tile in front of the bot is a hall, return it

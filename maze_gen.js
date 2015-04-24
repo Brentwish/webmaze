@@ -302,10 +302,14 @@ mazeObj.prototype.get_random_edge = function(dir) {
   return {x: x, y: y};
 }
 
-mazeObj.prototype.generate_npcs = function(num_npcs, spawn) {
+mazeObj.prototype.get_random_hall = function() {
+  return _.sample(this.all_halls());
+}
+
+mazeObj.prototype.generate_npcs = function(num_npcs) {
   npcs = [];
   for (i = 0; i < num_npcs; i++) {
-    var npc_settings = {id: i, position: spawn};
+    var npc_settings = {id: i, position: this.get_random_hall()};
     npcs.push(new npc.npcObj(npc_settings));
   }
   return npcs;

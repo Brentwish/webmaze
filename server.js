@@ -8,10 +8,10 @@ var _ = require('./public/js/underscore-min.js');
 
 var server_port = 3000;
 
-var maze_size_x = 10;
-var maze_size_y = 10;
+var maze_size_x = 50;
+var maze_size_y = 24;
 var num_teleporters = 6;
-var num_npcs = 2;
+var num_npcs = 12;
 var game_tick_length = 300;
 
 var players = {};
@@ -26,7 +26,7 @@ function create_maze(start, end) {
     start: start,
     end: end
   });
-  npcs = maze.generate_npcs(num_npcs, maze.end);
+  npcs = maze.generate_npcs(num_npcs);
 
   console.log('New Maze generated');
   console.log('Size  : (' + maze.width + ', ' + maze.height + ')');
@@ -85,7 +85,7 @@ io.on('connection', function(socket){
         if ((player_coord.x == npc.position.x) && (player_coord.y == npc.position.y)) {
           player_data.position = the_maze.start;
           players[socket.id] = player_data;
-          io.emit('player_update', players[socket.id]);
+          io.emit('player_update', player_data);
         }
       });
       //If the new move is the winning move

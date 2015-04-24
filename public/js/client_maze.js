@@ -142,3 +142,42 @@ clientMaze.prototype.update_player_position = function(id) {
     left: left}
   );
 }
+
+clientMaze.prototype.attempt_move = function(dir) {
+  var player_coord = this.get_current_player().position;
+  var x = player_coord.x
+  var y = player_coord.y
+  if (dir == "down") { //down
+    var new_y = y + 1;
+    if (new_y < maze.height) {
+      var tile = maze.get_tile_at(x, new_y);
+      if (tile.val == 1) {
+        maze.update_position(tile);
+      }
+    }
+  } else if (dir == "up") { //up
+    var new_y = player_coord.y - 1;
+    if (new_y >= 0) {
+      var tile = maze.get_tile_at(x, new_y);
+      if (tile.val == 1) {
+        maze.update_position(tile);
+      }
+    }
+  } else if (dir == "right") { //right
+    var new_x = player_coord.x + 1;
+    if (new_x < maze.width) {
+      var tile = maze.get_tile_at(new_x, y);
+      if (tile.val == 1) {
+        maze.update_position(tile);
+      }
+    }
+  } else if (dir == "left") { //left
+    var new_x = player_coord.x - 1;
+    if (new_x >= 0) {
+      var tile = maze.get_tile_at(new_x, y);
+      if (tile.val == 1) {
+        maze.update_position(tile);
+      }
+    }
+  }
+}

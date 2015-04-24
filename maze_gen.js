@@ -70,6 +70,18 @@ mazeObj.prototype.set_of_all_tiles = function() {
   return all_tiles;
 }
 
+mazeObj.prototype.get_adjacent_tile = function(position, direction) {
+  if (direction == 'left') {
+    return this.maze[position.y][position.x - 1];
+  } else if (direction == 'right') {
+    return this.maze[position.y][position.x + 1];
+  } else if (direction == 'up') {
+    return this.maze[position.y - 1][position.x];
+  } else if (direction == 'down') {
+    return this.maze[position.y + 1][position.x];
+  }
+}
+
 mazeObj.prototype.all_halls = function() {
   var all_halls = [];
   _.each(this.maze, function(row) {

@@ -52,7 +52,7 @@ io.on('connection', function(socket){
     npcs: npcs,
     id: socket.id
   });
-  setInterval(game_tick, 0300);
+  setInterval(game_tick, 750);
   io.emit('player_update', players[socket.id]);
   socket.on('coord_update', function(player_coord) {
     var player_data = players[socket.id];

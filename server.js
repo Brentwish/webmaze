@@ -8,10 +8,10 @@ var _ = require('./public/js/underscore-min.js');
 
 var server_port = 3000;
 
-var maze_size_x = 50;
-var maze_size_y = 20;
+var maze_size_x = 10;
+var maze_size_y = 10;
 var num_teleporters = 6;
-var num_npcs = 5;
+var num_npcs = 2;
 var game_tick_length = 300;
 
 var players = {};
@@ -39,6 +39,13 @@ function create_maze(start, end) {
 function game_tick() {
   _.each(npcs, function(npc) {
     npc.get_next_move(the_maze);
+    _.each(players, function(player_data, player_id) {
+      if ((player_data.position.x == npc.position.x) && (player_data.position.y == npc.position.y)) {
+        player_data.position = the_maze.start;
+        players[player_id] = player_data;
+        io.emit('player_update', players[player_id]);
+      }
+    });
     io.emit('npc_update', npcs);
   });
 }
@@ -73,6 +80,14 @@ io.on('connection', function(socket){
     var player_data = players[socket.id];
     //If we have a valid move
     if (the_maze.is_valid_move(player_data.position, player_coord)) {
+      //If the player moves into an npc, send them to the start
+      _.each(npcs, function(npc) {
+        if ((player_coord.x == npc.position.x) && (player_coord.y == npc.position.y)) {
+          player_data.position = the_maze.start;
+          players[socket.id] = player_data;
+          io.emit('player_update', players[socket.id]);
+        }
+      });
       //If the new move is the winning move
       if (player_coord.x == the_maze.end.x && player_coord.y == the_maze.end.y) {
         //Update the win count of the winning player

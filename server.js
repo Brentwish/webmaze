@@ -6,8 +6,14 @@ var maze_gen = require('./maze_gen.js');
 var npc = require('./npc.js');
 var _ = require('./public/js/underscore-min.js');
 
+var server_port = 3000;
+
 var maze_size_x = 50;
-var maze_size_y = 25;
+var maze_size_y = 20;
+var num_teleporters = 6;
+var num_npcs = 5;
+var game_tick_length = 300;
+
 var players = {};
 var npcs = [];
 var num_teleporters = 6;
@@ -20,7 +26,7 @@ function create_maze(start, end) {
     start: start,
     end: end
   });
-  npcs = maze.generate_npcs(10, end);
+  npcs = maze.generate_npcs(num_npcs, maze.end);
 
   console.log('New Maze generated');
   console.log('Size  : (' + maze.width + ', ' + maze.height + ')');
@@ -30,7 +36,15 @@ function create_maze(start, end) {
   return maze;
 }
 
+function game_tick() {
+  _.each(npcs, function(npc) {
+    npc.get_next_move(the_maze);
+    io.emit('npc_update', npcs);
+  });
+}
+
 var the_maze = create_maze();
+setInterval(game_tick, game_tick_length);
 
 app.use("/public", express.static(__dirname + '/public'));
 
@@ -43,12 +57,6 @@ app.get('/maze/', function(req, res) {
 });
 
 io.on('connection', function(socket){
-  var game_tick = function() {
-    _.each(npcs, function(npc) {
-      npc.get_next_move(the_maze);
-      io.emit('npc_update', npcs);
-    });
-  }
   players[socket.id] = {
     id: socket.id,
     win_count: 0,
@@ -60,7 +68,6 @@ io.on('connection', function(socket){
     npcs: npcs,
     id: socket.id
   });
-  setInterval(game_tick, 150);
   io.emit('player_update', players[socket.id]);
   socket.on('coord_update', function(player_coord) {
     var player_data = players[socket.id];
@@ -116,6 +123,6 @@ io.on('connection', function(socket){
   });
 });
 
-http.listen(3000, function() {
-  console.log('listening on *:3000');
+http.listen(server_port, function() {
+  console.log('listening on *:' + String(server_port));
 });

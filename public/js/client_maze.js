@@ -116,32 +116,28 @@ clientMaze.prototype.create_bot_div = function(id) {
 }
 
 clientMaze.prototype.update_bots = function(bot) {
-  if ($("#bot_" + bot.id).length == 0) {
+  var npc_div = $("#bot_" + bot.id);
+  if (npc_div.length == 0) {
     this.create_bot_div(bot.id);
   }
-  var npc_div = $("#bot_" + bot.id);
   var npc = this.npcs[bot.id];
   npc.position = bot.position;
   npc.direction = bot.direction;
-  var table_pos = $(this.table).position();
-  var top = (npc.position.y * 25) + table_pos.top + 1;
-  var left = (npc.position.x * 25) + table_pos.left + 1;
-  npc_div.css({
-    top: top,
-    left: left}
-  );
+  this.update_entity(npc_div, npc.position, 1);
 }
 
 clientMaze.prototype.update_player_position = function(id) {
   var player_div = $("#player_" + id);
   var player = this.players[id];
-  var table_pos = $(this.table).position();
-  var top = (player.position.y * 25) + table_pos.top + 1;
-  var left = (player.position.x * 25) + table_pos.left + 1;
-  player_div.css({
-    top: top,
-    left: left}
-  );
+  this.update_entity(player_div, player.position, 1);
+}
+
+clientMaze.prototype.update_entity = function(entity, position, padding) {
+  var tile_pos = $(this.table).find("td[name='tile_" + String(position.x) + "_" + String(position.y) + "']").position();
+  entity.css({
+    top: tile_pos.top + padding,
+    left: tile_pos.left + padding
+  });
 }
 
 clientMaze.prototype.attempt_move = function(dir) {

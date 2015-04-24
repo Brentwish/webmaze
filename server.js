@@ -7,16 +7,15 @@ var npc = require('./npc.js');
 var _ = require('./public/js/underscore-min.js');
 
 var maze_size_x = 50;
-var maze_size_y = 20;
+var maze_size_y = 25;
 var players = {};
 var npcs = [];
-//game tick function
 
 var the_maze = new maze_gen.mazeObj(maze_size_x, maze_size_y);
 var start = the_maze.get_random_edge();
 var end = the_maze.get_random_edge();
 the_maze.generate(start, [end], 6);
-npcs = the_maze.generate_npcs(5, end);
+npcs = the_maze.generate_npcs(10, end);
 
 console.log('New Maze generated');
 console.log('Size  : (' + maze_size_x + ', ' + maze_size_y + ')');
@@ -52,7 +51,7 @@ io.on('connection', function(socket){
     npcs: npcs,
     id: socket.id
   });
-  setInterval(game_tick, 750);
+  setInterval(game_tick, 150);
   io.emit('player_update', players[socket.id]);
   socket.on('coord_update', function(player_coord) {
     var player_data = players[socket.id];
@@ -69,7 +68,7 @@ io.on('connection', function(socket){
         start = the_maze.get_opposite_tile(end);
         end = the_maze.get_random_edge();
         the_maze.generate(start, [end], 6);
-        npcs = the_maze.generate_npcs(5, end);
+        npcs = the_maze.generate_npcs(10, end);
 
         console.log('\nNew Maze generated');
         console.log('Size  : (' + maze_size_x + ', ' + maze_size_y + ')');

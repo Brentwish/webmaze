@@ -26,17 +26,32 @@ tileObj.prototype.toString = function() {
   return this.val.toString();
 }
 
-function mazeObj(width, height) {
-  this.width = width;
-  this.height = height;
+function mazeObj(settings) {
+  this.width = settings.width;
+  this.height = settings.height;
+  this.num_teleporters = settings.num_teleporters;
   this.teleport_tiles = [];
   this.maze = new Array();
-  for (i = 0; i < height; i++) {
+  for (i = 0; i < this.height; i++) {
     this.maze[i] = new Array();
-    for (j = 0; j < width; j++) {
+    for (j = 0; j < this.width; j++) {
       this.maze[i][j] = new tileObj(j, i, 0);
     }
   }
+  if (_.isUndefined(settings.start)) {
+    this.start = this.get_random_edge();
+  } else {
+    this.start = settings.start;
+  }
+  if (_.isUndefined(settings.end)) {
+    this.end = this.get_random_edge();
+    while (this.end.x == this.start.x && this.end.y == this.start.y) {
+      this.end = this.get_random_edge();
+    }
+  } else {
+    this.end = settings.end;
+  }
+  this.generate();
 }
 
 mazeObj.prototype.surrounding_tiles = function(tile) {
@@ -114,7 +129,8 @@ mazeObj.prototype.is_border_tile = function(tile) {
   return tile.x == this.width - 1 || tile.x == 0 || tile.y == this.height - 1 || tile.y == 0;
 }
 
-mazeObj.prototype.generate = function(start, exits, num_teleport_pairs) {
+mazeObj.prototype.generate = function() {
+  var exits = [this.end];
   Set.prototype.pop = function() {
     var i = Math.ceil((Math.random() * this.size));
     var iter = this.values();
@@ -133,7 +149,7 @@ mazeObj.prototype.generate = function(start, exits, num_teleport_pairs) {
     tile.val = 1;
     garenteed_halls.push(tile);
   }, this);
-  var start_tile = this.maze[start.y][start.x];
+  var start_tile = this.maze[this.start.y][this.start.x];
   start_tile.val = 1;
 
   var working_tiles = new Set();
@@ -201,7 +217,7 @@ mazeObj.prototype.generate = function(start, exits, num_teleport_pairs) {
     }, 0);
     return touching_count > 1 || this.is_border_tile(hall);
   }, this);
-  for (i = 0; i < num_teleport_pairs; i++) {
+  for (i = 0; i < this.num_teleporters; i++) {
     if (all_halls.length >= 2) {
       var t1 = all_halls[Math.floor(Math.random() * all_halls.length)];
       all_halls = _.without(all_halls, t1);

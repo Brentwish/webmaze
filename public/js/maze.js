@@ -20,44 +20,80 @@ socket.on('player_disconnect', function(data) {
 $(window).off('keydown').on('keydown', function(e) {
   var key = e.which;
   if (_.isNull(maze)) return; //Return if maze has yet to be created
-  var player_coord = maze.get_current_player().position;
-  var x = player_coord.x
-  var y = player_coord.y
 
   if (key == 40) { //down
-    var new_y = y + 1;
-    if (new_y < maze.height) {
-      var tile = maze.get_tile_at(x, new_y);
-      if (tile.val == 1) {
-        maze.update_position(tile);
-      }
-    }
+    maze.attempt_move("down");
   } else if (key == 38) { //up
-    var new_y = player_coord.y - 1;
-    if (new_y >= 0) {
-      var tile = maze.get_tile_at(x, new_y);
-      if (tile.val == 1) {
-        maze.update_position(tile);
-      }
-    }
+    maze.attempt_move("up");
   } else if (key == 39) { //right
-    var new_x = player_coord.x + 1;
-    if (new_x < maze.width) {
-      var tile = maze.get_tile_at(new_x, y);
-      if (tile.val == 1) {
-        maze.update_position(tile);
-      }
-    }
+    maze.attempt_move("right");
   } else if (key == 37) { //left
-    var new_x = player_coord.x - 1;
-    if (new_x >= 0) {
-      var tile = maze.get_tile_at(new_x, y);
-      if (tile.val == 1) {
-        maze.update_position(tile);
-      }
-    }
+    maze.attempt_move("left");
   }
 
   e.preventDefault();
   return false;
 });
+
+var ongoingTouches = new Array();
+var touch_threshold = 40;
+
+$(window).on("touchstart", function(evt) {
+  evt.preventDefault();
+  touches = evt.originalEvent.changedTouches;
+  for (var i=0; i < touches.length; i++) {
+    ongoingTouches.push(copyTouch(touches[i]));
+  }
+});
+
+$(window).on("touchmove", function(evt) {
+  evt.preventDefault();
+  var touches = evt.originalEvent.changedTouches;
+
+  for (var i=0; i < touches.length; i++) {
+    var idx = ongoingTouchIndexById(touches[i].identifier);
+    if(idx >= 0) {
+      var x_diff = ongoingTouches[idx].pageX - touches[i].pageX;
+      var y_diff = ongoingTouches[idx].pageY - touches[i].pageY;
+      if (Math.abs(x_diff) > touch_threshold || Math.abs(y_diff) > touch_threshold) {
+        ongoingTouches.splice(idx, 1, copyTouch(touches[i]));  // swap in the new touch record
+        if (x_diff > 0 && Math.abs(x_diff) > touch_threshold) {
+          maze.attempt_move("left");
+        } else if (x_diff < 0 && Math.abs(x_diff) > touch_threshold) {
+          maze.attempt_move("right");
+        } else if (y_diff > 0 && Math.abs(y_diff) > touch_threshold) {
+          maze.attempt_move("up");
+        } else if (y_diff < 0 && Math.abs(y_diff) > touch_threshold) {
+          maze.attempt_move("down");
+        }
+      }
+    }
+  }
+});
+
+$(window).on("touchend", function(evt) {
+  evt.preventDefault();
+  var touches = evt.originalEvent.changedTouches;
+
+  for (var i=0; i < touches.length; i++) {
+    var idx = ongoingTouchIndexById(touches[i].identifier);
+
+    if(idx >= 0) {
+      ongoingTouches.splice(idx, 1);  // remove it; we're done
+    }
+  }
+});
+
+function copyTouch(touch) {
+  return { identifier: touch.identifier, pageX: touch.pageX, pageY: touch.pageY };
+}
+
+function ongoingTouchIndexById(idToFind) {
+  for (var i=0; i < ongoingTouches.length; i++) {
+    var id = ongoingTouches[i].identifier;
+    if (id == idToFind) {
+      return i;
+    }
+  }
+  return -1;    // not found
+}

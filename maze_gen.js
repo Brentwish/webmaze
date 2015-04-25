@@ -69,6 +69,12 @@ mazeObj.prototype.surrounding_tiles = function(tile) {
   return sur_tiles;
 }
 
+mazeObj.prototype.get_touching_count = function(tile) {
+  return  _.reduce(this.surrounding_tiles(tile), function(m, t) {
+    return m + t.val;
+  }, 0);
+}
+
 mazeObj.prototype.surrounding_halls = function(tile) {
   return _.select(this.surrounding_tiles(tile), function(t) {
     return t.is_hall();

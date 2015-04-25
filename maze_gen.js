@@ -45,13 +45,17 @@ function mazeObj(settings) {
   }
   if (_.isUndefined(settings.end)) {
     this.end = this.get_random_edge();
-    while (this.end.x == this.start.x && this.end.y == this.start.y) {
+    while (this.dist_between(this.end, this.start) < (this.width + this.height) / 2) {
       this.end = this.get_random_edge();
     }
   } else {
     this.end = settings.end;
   }
   this.generate();
+}
+
+mazeObj.prototype.dist_between = function(tile_a, tile_b) {
+  return Math.abs(tile_a.x - tile_b.x) + Math.abs(tile_a.y - tile_b.y);
 }
 
 mazeObj.prototype.surrounding_tiles = function(tile) {

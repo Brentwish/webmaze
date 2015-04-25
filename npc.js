@@ -22,7 +22,6 @@ npcObj.prototype.get_direction = function(tile) {
 
 npcObj.prototype.get_next_move = function(maze) {
   var surrounding_halls = maze.surrounding_halls(this.position);
-  var i = Math.floor(Math.random() * surrounding_halls.length);
   var facing_tile = maze.get_facing_tile(this.position, this.direction);
   var next_move;
 
@@ -34,8 +33,13 @@ npcObj.prototype.get_next_move = function(maze) {
   else if (facing_tile != this.position && facing_tile.val == 1) {
     next_move = facing_tile;
   }
+  else if (surrounding_halls.length == 2 && facing_tile != this.position && facing_tile.val == 0) {
+    next_move = _.sample(_.reject(surrounding_halls, function(t) {
+        return this.last_position.same_coords(t);
+    }, this));
+  }
   else {
-    next_move = surrounding_halls[i];
+    next_move = _.sample(surrounding_halls);
   }
   this.direction = this.get_direction(next_move);
   this.last_position = this.position;

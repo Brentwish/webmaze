@@ -9,6 +9,12 @@ function npcObj(settings) {
   this.direction = 'left';
   this.last_position = settings.position;
   this.id = settings.id;
+  this.speed = settings.speed;
+  this.move_timer = 0;
+}
+
+npcObj.prototype.should_move = function() {
+  return this.move_timer >= this.speed;
 }
 
 npcObj.prototype.get_direction = function(tile) {

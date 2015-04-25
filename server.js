@@ -13,7 +13,6 @@ var maze_size_y = 35;
 var num_teleporters = 6;
 var num_npcs = 10;
 var game_tick_length = 20;
-var bot_speed = 150;
 
 var players = {};
 var npcs = [];
@@ -36,15 +35,11 @@ function create_maze(start, end) {
   return maze;
 }
 
-var bot_count = 0;
 function game_tick() {
-  var next_move;
-
-  if (bot_count * game_tick_length <= bot_speed) {
-    bot_count++;
-  } else {
-    _.each(npcs, function(npc) {
-      next_move = npc.get_next_move(the_maze);
+  _.each(npcs, function(npc) {
+    if (npc.should_move()) {
+      npc.move_timer = 0;
+      var next_move = npc.get_next_move(the_maze);
       _.each(players, function(player_data, player_id) {
         var is_dead = false;
         if (npc.hit_box == "self") {
@@ -62,9 +57,10 @@ function game_tick() {
       });
       npc.update_position(next_move);
       io.emit('npc_update', npc);
-    });
-    bot_count = 0;
-  }
+    } else {
+      npc.move_timer += game_tick_length;
+    }
+  });
 }
 
 var the_maze = create_maze();

@@ -327,7 +327,8 @@ mazeObj.prototype.generate_npcs = function(num_npcs) {
       position: this.get_random_hall(),
       name: "maze walker",
       strategy: "not back",
-      hit_box: "self"
+      hit_box: "self",
+      speed: 150
     };
     npcs.push(new npc.npcObj(npc_settings));
   }
@@ -337,7 +338,8 @@ mazeObj.prototype.generate_npcs = function(num_npcs) {
       position: tile,
       name: "wall walker",
       strategy: "always right",
-      hit_box: "surrounding"
+      hit_box: "surrounding",
+      speed: 150
     }));
   });
   return npcs;

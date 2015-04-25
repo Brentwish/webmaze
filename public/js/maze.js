@@ -26,6 +26,7 @@ $(window).off('keydown').on('keydown', function(e) {
   var key = e.which;
   if (_.isNull(maze)) return; //Return if maze has yet to be created
 
+<<<<<<< HEAD
   if (key == 40) { //down
     maze.attempt_move("down");
   } else if (key == 38) { //up
@@ -33,6 +34,15 @@ $(window).off('keydown').on('keydown', function(e) {
   } else if (key == 39) { //right
     maze.attempt_move("right");
   } else if (key == 37) { //left
+=======
+  if (key == 40 || key == 83) { //down
+    maze.attempt_move("down");
+  } else if (key == 38 || key == 87) { //up
+    maze.attempt_move("up");
+  } else if (key == 39 || key == 68) { //right
+    maze.attempt_move("right");
+  } else if (key == 37 || key == 65) { //left
+>>>>>>> c1075ab4af79e052a602641e96fc28d165696560
     maze.attempt_move("left");
   }
 

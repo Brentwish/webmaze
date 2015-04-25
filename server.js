@@ -106,6 +106,7 @@ io.on('connection', function(socket){
 
         //Regenerate the maze
         the_maze = create_maze(the_maze.get_opposite_tile(the_maze.end))
+        npcs = the_maze.generate_npcs(num_npcs);
 
         //Reset the player data
         _.each(players, function(player_data, player_id) {

@@ -75,6 +75,12 @@ mazeObj.prototype.surrounding_halls = function(tile) {
   });
 }
 
+mazeObj.prototype.surrounding_walls = function(tile) {
+  return _.select(this.surrounding_tiles(tile), function(t) {
+    return t.is_wall();
+  });
+}
+
 mazeObj.prototype.set_of_all_tiles = function() {
   var all_tiles = new Set();
   for (x = 0; x < this.width; x++) {
@@ -308,11 +314,28 @@ mazeObj.prototype.get_random_hall = function() {
 }
 
 mazeObj.prototype.generate_npcs = function(num_npcs) {
-  npcs = [];
-  for (i = 0; i < num_npcs; i++) {
-    var npc_settings = {id: i, position: this.get_random_hall()};
+  var npcs = [];
+  var i = 0;
+  var walls_at_end = this.surrounding_walls(this.end);
+  for (i = 0; i < num_npcs - walls_at_end.length; i++) {
+    var npc_settings = {
+      id: i,
+      position: this.get_random_hall(),
+      name: "maze walker",
+      strategy: "not back",
+      hit_box: "self"
+    };
     npcs.push(new npc.npcObj(npc_settings));
   }
+  _.each(walls_at_end, function(tile) {
+    npcs.push(new npc.npcObj({
+      id: i++,
+      position: tile,
+      name: "wall walker",
+      strategy: "always right",
+      hit_box: "surrounding"
+    }));
+  });
   return npcs;
   //return an array of bot objects
 }
@@ -323,6 +346,31 @@ mazeObj.prototype.tile_at = function(x, y) {
   } else {
     return null;
   }
+}
+
+mazeObj.prototype.get_tile_at_dir = function(tile, dir) {
+  var t = null;
+  try {
+    if (dir == "right") {
+      t = this.tile_at(tile.x + 1, tile.y);
+    } else if (dir == "left") {
+      t = this.tile_at(tile.x - 1, tile.y);
+    } else if (dir == "up") {
+      t = this.tile_at(tile.x, tile.y - 1);
+    } else if (dir == "down") {
+      t = this.tile_at(tile.x, tile.y + 1);
+    }
+  } finally {
+    return t;
+  }
+}
+
+mazeObj.prototype.get_relative_right = function(dir) {
+  if (dir == "up") return "right";
+  if (dir == "down") return "left";
+  if (dir == "left") return "up";
+  if (dir == "right") return "down";
+  return "right";
 }
 
 exports.mazeObj = mazeObj;

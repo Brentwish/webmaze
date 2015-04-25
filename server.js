@@ -8,16 +8,15 @@ var _ = require('./public/js/underscore-min.js');
 
 var server_port = 3000;
 
-var maze_size_x = 54;
-var maze_size_y = 28;
+var maze_size_x = 70;
+var maze_size_y = 35;
 var num_teleporters = 6;
-var num_npcs = 14;
+var num_npcs = 10;
 var game_tick_length = 20;
 var bot_speed = 150;
 
 var players = {};
 var npcs = [];
-var num_teleporters = 6;
 
 function create_maze(start, end) {
   var maze = new maze_gen.mazeObj({
@@ -47,7 +46,15 @@ function game_tick() {
     _.each(npcs, function(npc) {
       next_move = npc.get_next_move(the_maze);
       _.each(players, function(player_data, player_id) {
-        if (player_data.position.same_coords(next_move)) {
+        var is_dead = false;
+        if (npc.hit_box == "self") {
+          is_dead = player_data.position.same_coords(next_move);
+        } else if (npc.hit_box == "surrounding") {
+          is_dead = _.any(the_maze.surrounding_tiles(next_move), function(tile) {
+            return player_data.position.same_coords(tile);
+          }) || player_data.position.same_coords(next_move);
+        }
+        if (is_dead) {
           player_data.position = the_maze.start;
           players[player_id] = player_data;
           io.emit('player_update', players[player_id]);

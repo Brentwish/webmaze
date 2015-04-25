@@ -14,7 +14,7 @@ function clientPlayer(settings) {
     var luma = 0.2126 * r + 0.7152 * g + 0.0722 * b; // per ITU-R BT.709
 
     return luma < 180 ? "white" : "black";
-  })(this.id);
+  })(this.color);
 }
 
 clientPlayer.prototype.current_tile_name = function() {

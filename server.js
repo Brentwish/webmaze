@@ -6,7 +6,7 @@ var maze_gen = require('./maze_gen.js');
 var npc = require('./npc.js');
 var _ = require('./public/js/underscore-min.js');
 
-var server_port = 3000;
+var server_port = (process.env.PORT || 3000);
 
 var maze_size_x = 70;
 var maze_size_y = 35;

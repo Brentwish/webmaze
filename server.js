@@ -47,7 +47,7 @@ function game_tick() {
     _.each(npcs, function(npc) {
       next_move = npc.get_next_move(the_maze);
       _.each(players, function(player_data, player_id) {
-        if ((player_data.position.x == next_move.x) && (player_data.position.y == next_move.y)) {
+        if (player_data.position.same_coords(next_move)) {
           player_data.position = the_maze.start;
           players[player_id] = player_data;
           io.emit('player_update', players[player_id]);
@@ -88,8 +88,9 @@ io.on('connection', function(socket){
   io.emit('player_update', players[socket.id]);
   socket.on('coord_update', function(player_coord) {
     var player_data = players[socket.id];
+    var new_tile = the_maze.tile_at(player_coord.x, player_coord.y);
     //If we have a valid move
-    if (the_maze.is_valid_move(player_data.position, player_coord)) {
+    if (!_.isNull(new_tile) && the_maze.is_valid_move(player_data.position, new_tile)) {
       //If the player moves into an npc, send them to the start
       _.each(npcs, function(npc) {
         if ((player_coord.x == npc.position.x) && (player_coord.y == npc.position.y)) {

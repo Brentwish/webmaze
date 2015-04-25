@@ -23,7 +23,7 @@ tileObj.prototype.same_coords = function(coords) {
 }
 
 tileObj.prototype.toString = function() {
-  return this.val.toString();
+  return String(this.x) + "," + String(this.y);
 }
 
 function mazeObj(settings) {
@@ -259,21 +259,22 @@ mazeObj.prototype.print = function() {
 }
 
 mazeObj.prototype.get_opposite_tile = function(old_tile) {
-  var tile = {};
+  var x = 0;
+  var y = 0;
   if (old_tile.x == this.width - 1) {
-    tile.x = 0;
-    tile.y = old_tile.y;
+    x = 0;
+    y = old_tile.y;
   } else if (old_tile.x == 0) {
-    tile.x = this.width - 1;
-    tile.y = old_tile.y;
+    x = this.width - 1;
+    y = old_tile.y;
   } else if (old_tile.y == this.height - 1) {
-    tile.x = old_tile.x;
-    tile.y = 0;
+    x = old_tile.x;
+    y = 0;
   } else if (old_tile.y == 0) {
-    tile.x = old_tile.x;
-    tile.y = this.height - 1;
+    x = old_tile.x;
+    y = this.height - 1;
   }
-  return tile;
+  return this.tile_at(x, y);
 }
 
 mazeObj.prototype.get_random_edge = function(dir) {
@@ -299,7 +300,7 @@ mazeObj.prototype.get_random_edge = function(dir) {
     y = Math.floor(Math.random() * (this.height - 2)) + 1;
   }
 
-  return {x: x, y: y};
+  return this.tile_at(x, y);
 }
 
 mazeObj.prototype.get_random_hall = function() {
@@ -314,6 +315,14 @@ mazeObj.prototype.generate_npcs = function(num_npcs) {
   }
   return npcs;
   //return an array of bot objects
+}
+
+mazeObj.prototype.tile_at = function(x, y) {
+  if (x >= 0 && x < this.width && y >= 0 && y < this.height) {
+    return this.maze[y][x];
+  } else {
+    return null;
+  }
 }
 
 exports.mazeObj = mazeObj;

@@ -1,4 +1,5 @@
 var _ = require('underscore');
+var npc = require('./npc.js');
 
 function tileObj(x, y, val) {
   this.x = x;
@@ -9,12 +10,20 @@ function tileObj(x, y, val) {
   this.pair_id = null;
 }
 
+tileObj.prototype.is_hall = function() {
+  return this.val == 1;
+}
+
+tileObj.prototype.is_wall = function() {
+  return this.val == 0;
+}
+
 tileObj.prototype.same_coords = function(coords) {
   return this.x == coords.x && this.y == coords.y;
 }
 
 tileObj.prototype.toString = function() {
-  return this.val.toString();
+  return String(this.x) + "," + String(this.y);
 }
 
 function mazeObj(settings) {
@@ -36,13 +45,17 @@ function mazeObj(settings) {
   }
   if (_.isUndefined(settings.end)) {
     this.end = this.get_random_edge();
-    while (this.end.x == this.start.x && this.end.y == this.start.y) {
+    while (this.dist_between(this.end, this.start) < (this.width + this.height) / 2) {
       this.end = this.get_random_edge();
     }
   } else {
     this.end = settings.end;
   }
   this.generate();
+}
+
+mazeObj.prototype.dist_between = function(tile_a, tile_b) {
+  return Math.abs(tile_a.x - tile_b.x) + Math.abs(tile_a.y - tile_b.y);
 }
 
 mazeObj.prototype.surrounding_tiles = function(tile) {
@@ -60,6 +73,24 @@ mazeObj.prototype.surrounding_tiles = function(tile) {
   return sur_tiles;
 }
 
+mazeObj.prototype.get_touching_count = function(tile) {
+  return  _.reduce(this.surrounding_tiles(tile), function(m, t) {
+    return m + t.val;
+  }, 0);
+}
+
+mazeObj.prototype.surrounding_halls = function(tile) {
+  return _.select(this.surrounding_tiles(tile), function(t) {
+    return t.is_hall();
+  });
+}
+
+mazeObj.prototype.surrounding_walls = function(tile) {
+  return _.select(this.surrounding_tiles(tile), function(t) {
+    return t.is_wall();
+  });
+}
+
 mazeObj.prototype.set_of_all_tiles = function() {
   var all_tiles = new Set();
   for (x = 0; x < this.width; x++) {
@@ -68,6 +99,34 @@ mazeObj.prototype.set_of_all_tiles = function() {
     }
   }
   return all_tiles;
+}
+
+mazeObj.prototype.get_facing_tile = function(position, direction) {
+  if (direction == 'left') {
+    if (position.x == 0) {
+      return position;
+    } else {
+      return this.maze[position.y][position.x - 1];
+    }
+  } else if (direction == 'right') {
+    if (position.x == this.width - 1) {
+      return position;
+    } else {
+      return this.maze[position.y][position.x + 1];
+    }
+  } else if (direction == 'up') {
+    if (position.y == 0) {
+      return position;
+    } else {
+      return this.maze[position.y - 1][position.x];
+    }
+  } else if (direction == 'down') {
+    if (position.y == this.height - 1) {
+      return position;
+    } else {
+      return this.maze[position.y + 1][position.x];
+    }
+  }
 }
 
 mazeObj.prototype.all_halls = function() {
@@ -216,21 +275,22 @@ mazeObj.prototype.print = function() {
 }
 
 mazeObj.prototype.get_opposite_tile = function(old_tile) {
-  var tile = {};
+  var x = 0;
+  var y = 0;
   if (old_tile.x == this.width - 1) {
-    tile.x = 0;
-    tile.y = old_tile.y;
+    x = 0;
+    y = old_tile.y;
   } else if (old_tile.x == 0) {
-    tile.x = this.width - 1;
-    tile.y = old_tile.y;
+    x = this.width - 1;
+    y = old_tile.y;
   } else if (old_tile.y == this.height - 1) {
-    tile.x = old_tile.x;
-    tile.y = 0;
+    x = old_tile.x;
+    y = 0;
   } else if (old_tile.y == 0) {
-    tile.x = old_tile.x;
-    tile.y = this.height - 1;
+    x = old_tile.x;
+    y = this.height - 1;
   }
-  return tile;
+  return this.tile_at(x, y);
 }
 
 mazeObj.prototype.get_random_edge = function(dir) {
@@ -256,7 +316,73 @@ mazeObj.prototype.get_random_edge = function(dir) {
     y = Math.floor(Math.random() * (this.height - 2)) + 1;
   }
 
-  return {x: x, y: y};
+  return this.tile_at(x, y);
+}
+
+mazeObj.prototype.get_random_hall = function() {
+  return _.sample(this.all_halls());
+}
+
+mazeObj.prototype.generate_npcs = function(num_npcs) {
+  var npcs = [];
+  var i = 0;
+  var walls_at_end = this.surrounding_walls(this.end);
+  for (i = 0; i < num_npcs - walls_at_end.length; i++) {
+    var npc_settings = {
+      id: i,
+      position: this.get_random_hall(),
+      name: "maze walker",
+      strategy: "not back",
+      hit_box: "self",
+      speed: 150
+    };
+    npcs.push(new npc.npcObj(npc_settings));
+  }
+  _.each(walls_at_end, function(tile) {
+    npcs.push(new npc.npcObj({
+      id: i++,
+      position: tile,
+      name: "wall walker",
+      strategy: "always right",
+      hit_box: "surrounding",
+      speed: 150
+    }));
+  });
+  return npcs;
+  //return an array of bot objects
+}
+
+mazeObj.prototype.tile_at = function(x, y) {
+  if (x >= 0 && x < this.width && y >= 0 && y < this.height) {
+    return this.maze[y][x];
+  } else {
+    return null;
+  }
+}
+
+mazeObj.prototype.get_tile_at_dir = function(tile, dir) {
+  var t = null;
+  try {
+    if (dir == "right") {
+      t = this.tile_at(tile.x + 1, tile.y);
+    } else if (dir == "left") {
+      t = this.tile_at(tile.x - 1, tile.y);
+    } else if (dir == "up") {
+      t = this.tile_at(tile.x, tile.y - 1);
+    } else if (dir == "down") {
+      t = this.tile_at(tile.x, tile.y + 1);
+    }
+  } finally {
+    return t;
+  }
+}
+
+mazeObj.prototype.get_relative_right = function(dir) {
+  if (dir == "up") return "right";
+  if (dir == "down") return "left";
+  if (dir == "left") return "up";
+  if (dir == "right") return "down";
+  return "right";
 }
 
 exports.mazeObj = mazeObj;

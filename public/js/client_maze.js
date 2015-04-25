@@ -6,6 +6,7 @@ function clientMaze(settings) {
   this.maze = settings.maze.maze;
   this.teleport_tiles = settings.maze.teleport_tiles;
   this.players = {};
+  this.npcs = settings.npcs;
   _.each(settings.player_data, function(player, id) {
     this.players[id] = new clientPlayer(player);
   }, this);
@@ -57,7 +58,7 @@ clientMaze.prototype.draw_maze = function() {
   }, this);
 
   //Make sure the table doesn't squish
-  $(this.table).css({'min-width': this.width * 25, 'min-height': this.height * 25});
+  $(this.table).css({'min-width': this.width * 20, 'min-height': this.height * 20});
 
   this.draw_teleports();
 
@@ -95,7 +96,9 @@ clientMaze.prototype.get_current_player = function() {
 clientMaze.prototype.create_player_div = function(id) {
   var player = this.players[id];
   var div = $('<div>')
-    .addClass('player').attr('id', "player_" + id)
+    .attr('id', "player_" + id)
+    .addClass('player')
+    .addClass('board_entity')
     .css('background-color', player.color)
     .css('color', player.text_color)
     .text(player.win_count);
@@ -106,16 +109,46 @@ clientMaze.prototype.create_player_div = function(id) {
   this.update_player_position(id);
 }
 
+clientMaze.prototype.create_bot_div = function(id) {
+  var npc = this.npcs[id]
+  var div = $('<div>')
+    .attr('id', "bot_" + id);
+  if (npc.name == "wall walker") {
+    div
+      .addClass('wall_walker')
+      .addClass('large_board_entity');
+  } else if (npc.name == "maze walker") {
+    div
+      .addClass('maze_walker')
+      .addClass('board_entity');
+  }
+  $(this.table).append(div);
+}
+
+clientMaze.prototype.update_bots = function(bot) {
+  var npc_div = $("#bot_" + bot.id);
+  if (npc_div.length == 0) {
+    this.create_bot_div(bot.id);
+  }
+  var npc = this.npcs[bot.id];
+  npc.position = bot.position;
+  npc.direction = bot.direction;
+  var padding = (npc.name == "wall walker" ? -19 : 1);
+  this.update_entity(npc_div, npc.position, padding);
+}
+
 clientMaze.prototype.update_player_position = function(id) {
   var player_div = $("#player_" + id);
   var player = this.players[id];
-  var table_pos = $(this.table).position();
-  var top = (player.position.y * 25) + table_pos.top + 1;
-  var left = (player.position.x * 25) + table_pos.left + 1;
-  player_div.css({
-    top: top,
-    left: left}
-  );
+  this.update_entity(player_div, player.position, 1);
+}
+
+clientMaze.prototype.update_entity = function(entity, position, padding) {
+  var tile_pos = $(this.table).find("td[name='tile_" + String(position.x) + "_" + String(position.y) + "']").position();
+  entity.css({
+    top: tile_pos.top + padding,
+    left: tile_pos.left + padding
+  });
 }
 
 clientMaze.prototype.attempt_move = function(dir) {

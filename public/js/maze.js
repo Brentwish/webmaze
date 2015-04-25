@@ -12,6 +12,11 @@ socket.on('player_update', function(data) {
   maze.update_player(data.id, data);
 });
 
+socket.on('npc_update', function(bot) {
+  if (_.isNull(maze)) return; //Return if maze has yet to be created
+  maze.update_bots(bot);
+});
+
 socket.on('player_disconnect', function(data) {
   if (_.isNull(maze)) return; //Return if maze has yet to be created
   maze.delete_player(data.id);
@@ -21,13 +26,13 @@ $(window).off('keydown').on('keydown', function(e) {
   var key = e.which;
   if (_.isNull(maze)) return; //Return if maze has yet to be created
 
-  if (key == 40) { //down
+  if (key == 40 || key == 83) { //down
     maze.attempt_move("down");
-  } else if (key == 38) { //up
+  } else if (key == 38 || key == 87) { //up
     maze.attempt_move("up");
-  } else if (key == 39) { //right
+  } else if (key == 39 || key == 68) { //right
     maze.attempt_move("right");
-  } else if (key == 37) { //left
+  } else if (key == 37 || key == 65) { //left
     maze.attempt_move("left");
   }
 

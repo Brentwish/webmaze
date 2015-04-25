@@ -3,12 +3,19 @@ var app = express();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
 var maze_gen = require('./maze_gen.js');
+var npc = require('./npc.js');
 var _ = require('./public/js/underscore-min.js');
 
-var maze_size_x = 10;
-var maze_size_y = 10;
-var players = {};
+var server_port = 3000;
+
+var maze_size_x = 70;
+var maze_size_y = 35;
 var num_teleporters = 6;
+var num_npcs = 10;
+var game_tick_length = 20;
+
+var players = {};
+var npcs = [];
 
 function create_maze(start, end) {
   var maze = new maze_gen.mazeObj({
@@ -18,6 +25,7 @@ function create_maze(start, end) {
     start: start,
     end: end
   });
+  npcs = maze.generate_npcs(num_npcs);
 
   console.log('New Maze generated');
   console.log('Size  : (' + maze.width + ', ' + maze.height + ')');
@@ -27,7 +35,36 @@ function create_maze(start, end) {
   return maze;
 }
 
+function game_tick() {
+  _.each(npcs, function(npc) {
+    if (npc.should_move()) {
+      npc.move_timer = 0;
+      var next_move = npc.get_next_move(the_maze);
+      _.each(players, function(player_data, player_id) {
+        var is_dead = false;
+        if (npc.hit_box == "self") {
+          is_dead = player_data.position.same_coords(next_move);
+        } else if (npc.hit_box == "surrounding") {
+          is_dead = _.any(the_maze.surrounding_tiles(next_move), function(tile) {
+            return player_data.position.same_coords(tile);
+          }) || player_data.position.same_coords(next_move);
+        }
+        if (is_dead) {
+          player_data.position = the_maze.start;
+          players[player_id] = player_data;
+          io.emit('player_update', players[player_id]);
+        }
+      });
+      npc.update_position(next_move);
+      io.emit('npc_update', npc);
+    } else {
+      npc.move_timer += game_tick_length;
+    }
+  });
+}
+
 var the_maze = create_maze();
+setInterval(game_tick, game_tick_length);
 
 app.use("/public", express.static(__dirname + '/public'));
 
@@ -48,21 +85,28 @@ io.on('connection', function(socket){
   socket.emit('maze_data', {
     maze: the_maze,
     player_data: players,
+    npcs: npcs,
     id: socket.id
   });
   io.emit('player_update', players[socket.id]);
   socket.on('coord_update', function(player_coord) {
     var player_data = players[socket.id];
+    var new_tile = the_maze.tile_at(player_coord.x, player_coord.y);
     //If we have a valid move
-    if (the_maze.is_valid_move(player_data.position, player_coord)) {
+    if (!_.isNull(new_tile) && the_maze.is_valid_move(player_data.position, new_tile)) {
+      //If the player moves into an npc, send them to the start
+      var has_died = _.any(npcs, function(npc) {
+        return new_tile.same_coords(npc.position);
+      });
       //If the new move is the winning move
-      if (player_coord.x == the_maze.end.x && player_coord.y == the_maze.end.y) {
+      if (!has_died && new_tile.same_coords(the_maze.end)) {
         //Update the win count of the winning player
         player_data.win_count++;
         players[socket.id] = player_data;
 
         //Regenerate the maze
         the_maze = create_maze(the_maze.get_opposite_tile(the_maze.end))
+        npcs = the_maze.generate_npcs(num_npcs);
 
         //Reset the player data
         _.each(players, function(player_data, player_id) {
@@ -75,11 +119,12 @@ io.on('connection', function(socket){
           socket.emit('maze_data', {
             maze: the_maze,
             player_data: players,
+            npcs: npcs,
             id: socket.id
           });
         });
       } else { //Normal position update
-        player_data.position = player_coord;
+        player_data.position = (has_died ? the_maze.start : new_tile);
         io.emit('player_update', player_data);
         players[socket.id] = player_data;
       }
@@ -104,6 +149,6 @@ io.on('connection', function(socket){
   });
 });
 
-http.listen(3000, function() {
-  console.log('listening on *:3000');
+http.listen(server_port, function() {
+  console.log('listening on *:' + String(server_port));
 });

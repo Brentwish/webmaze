@@ -7,38 +7,44 @@
       body { font: 13px Helvetica, Arial; }
       form { background: #000; padding: 3px; position: fixed; bottom: 0; width: 100%; }
       #maze_table { border-spacing: 0px; position: absolute; }
-      .wall { width: 25px; height: 25px; background-color: gray; }
-      .hall { width: 25px; height: 25px; background-color: white; }
-      .player {
-        border-radius: 50%;
+      .wall { width: 20px; height: 20px; background-color: gray; }
+      .hall { width: 20px; height: 20px; background-color: white; }
+      .board_entity {
         text-align: center;
         font-weight: bold;
-        line-height: 23px;
-        font-size: 15px;
-        padding-right: 1px;
-        width: 23px;
-        height: 23px;
+        line-height: 18px;
+        font-size: 10px;
+        width: 18px;
+        height: 18px;
         position: absolute;
+      }
+      .large_board_entity {
+        width: 58px;
+        height: 58px;
+        position: absolute;
+      }
+      .player {
+        border-radius: 50%;
         z-index: 1;
         transition: all .09s;
       }
       .main_player {
         z-index: 2;
       }
-      .npc_style {
+      .maze_walker {
         background: black;
         background-image: -webkit-radial-gradient(23px 23px, circle cover, black, red);
         color: white;
         border-radius: 50%;
-        text-align: center;
-        font-weight: bold;
-        line-height: 23px;
-        width: 23px;
-        height: 23px;
-        font-size: 15px;
-        padding-right: 1px;
         z-index: 3;
-        position: absolute;
+        transition: all 0.30s;
+      }
+      .wall_walker {
+        background: black;
+        background-image: -webkit-radial-gradient(58px 58px, circle cover, red, orange);
+        color: white;
+        border-radius: 50%;
+        z-index: 3;
         transition: all 0.30s;
       }
     </style>

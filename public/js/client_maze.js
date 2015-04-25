@@ -58,7 +58,7 @@ clientMaze.prototype.draw_maze = function() {
   }, this);
 
   //Make sure the table doesn't squish
-  $(this.table).css({'min-width': this.width * 25, 'min-height': this.height * 25});
+  $(this.table).css({'min-width': this.width * 20, 'min-height': this.height * 20});
 
   this.draw_teleports();
 
@@ -96,7 +96,9 @@ clientMaze.prototype.get_current_player = function() {
 clientMaze.prototype.create_player_div = function(id) {
   var player = this.players[id];
   var div = $('<div>')
-    .addClass('player').attr('id', "player_" + id)
+    .attr('id', "player_" + id)
+    .addClass('player')
+    .addClass('board_entity')
     .css('background-color', player.color)
     .css('color', player.text_color)
     .text(player.win_count);
@@ -110,8 +112,16 @@ clientMaze.prototype.create_player_div = function(id) {
 clientMaze.prototype.create_bot_div = function(id) {
   var npc = this.npcs[id]
   var div = $('<div>')
-    .addClass('npc_style').attr('id', "bot_" + id)
-    .text("☠");
+    .attr('id', "bot_" + id);
+  if (npc.name == "wall walker") {
+    div
+      .addClass('wall_walker')
+      .addClass('large_board_entity');
+  } else if (npc.name == "maze walker") {
+    div
+      .addClass('maze_walker')
+      .addClass('board_entity');
+  }
   $(this.table).append(div);
 }
 
@@ -123,7 +133,8 @@ clientMaze.prototype.update_bots = function(bot) {
   var npc = this.npcs[bot.id];
   npc.position = bot.position;
   npc.direction = bot.direction;
-  this.update_entity(npc_div, npc.position, 1);
+  var padding = (npc.name == "wall walker" ? -19 : 1);
+  this.update_entity(npc_div, npc.position, padding);
 }
 
 clientMaze.prototype.update_player_position = function(id) {

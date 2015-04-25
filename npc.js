@@ -35,27 +35,22 @@ npcObj.prototype.update_position = function(next_move) {
 
 npcObj.prototype.npc_strategies = {
   "not back": function(maze, npc) {
-    var surrounding_halls = maze.surrounding_halls(npc.position);
     var facing_tile = maze.get_facing_tile(npc.position, npc.direction);
+    var surrounding_halls = _.reject(maze.surrounding_halls(npc.position), function(t) {
+      return maze.get_touching_count(t) == 1 && maze.get_touching_count(npc.position) > 2 && !facing_tile.same_coords(t);
+    });
     var next_move;
-
-    if (surrounding_halls.length > 2) {
+    if (surrounding_halls.length > 1) {
       next_move = _.sample(_.reject(surrounding_halls, function(t) {
-          return this.last_position.same_coords(t);
+        return npc.last_position.same_coords(t);
       }, npc));
     }
-    else if (facing_tile != npc.position && facing_tile.val == 1) {
-      next_move = facing_tile;
-    }
-    else if (surrounding_halls.length == 2 && facing_tile != npc.position && facing_tile.val == 0) {
-      next_move = _.sample(_.reject(surrounding_halls, function(t) {
-          return this.last_position.same_coords(t);
-      }, npc));
+    else if (surrounding_halls.length == 1) {
+      next_move = surrounding_halls[0];
     }
     else {
-      next_move = _.sample(surrounding_halls);
+      next_move = _.sample(maze.surrounding_halls(npc.position));
     }
-
     return next_move;
   },
   "always right": function(maze, npc) {

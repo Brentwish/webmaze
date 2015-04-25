@@ -41,6 +41,7 @@ npcObj.prototype.get_next_move = function(maze) {
   else {
     next_move = _.sample(surrounding_halls);
   }
+
   return next_move;
 }
 

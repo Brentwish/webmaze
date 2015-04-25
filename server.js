@@ -8,10 +8,10 @@ var _ = require('./public/js/underscore-min.js');
 
 var server_port = 3000;
 
-var maze_size_x = 50;
-var maze_size_y = 24;
+var maze_size_x = 15;
+var maze_size_y = 10;
 var num_teleporters = 6;
-var num_npcs = 12;
+var num_npcs = 6;
 var game_tick_length = 300;
 
 var players = {};
@@ -37,16 +37,18 @@ function create_maze(start, end) {
 }
 
 function game_tick() {
+  var next_move;
   _.each(npcs, function(npc) {
-    npc.get_next_move(the_maze);
+    next_move = npc.get_next_move(the_maze);
     _.each(players, function(player_data, player_id) {
-      if ((player_data.position.x == npc.position.x) && (player_data.position.y == npc.position.y)) {
+      if ((player_data.position.x == next_move.x) && (player_data.position.y == next_move.y)) {
         player_data.position = the_maze.start;
         players[player_id] = player_data;
         io.emit('player_update', players[player_id]);
       }
     });
-    io.emit('npc_update', npcs);
+    npc.update_position(next_move);
+    io.emit('npc_update', npc);
   });
 }
 

@@ -41,9 +41,12 @@ npcObj.prototype.get_next_move = function(maze) {
   else {
     next_move = _.sample(surrounding_halls);
   }
+  return next_move;
+}
+
+npcObj.prototype.update_position = function(next_move) {
   this.direction = this.get_direction(next_move);
   this.last_position = this.position;
   this.position = next_move;
-  return next_move;
 }
 exports.npcObj = npcObj;

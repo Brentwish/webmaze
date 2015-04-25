@@ -92,15 +92,11 @@ io.on('connection', function(socket){
     //If we have a valid move
     if (!_.isNull(new_tile) && the_maze.is_valid_move(player_data.position, new_tile)) {
       //If the player moves into an npc, send them to the start
-      _.each(npcs, function(npc) {
-        if ((player_coord.x == npc.position.x) && (player_coord.y == npc.position.y)) {
-          player_data.position = the_maze.start;
-          players[socket.id] = player_data;
-          io.emit('player_update', player_data);
-        }
+      var has_died = _.any(npcs, function(npc) {
+        return new_tile.same_coords(npc.position);
       });
       //If the new move is the winning move
-      if (player_coord.x == the_maze.end.x && player_coord.y == the_maze.end.y) {
+      if (!has_died && new_tile.same_coords(the_maze.end)) {
         //Update the win count of the winning player
         player_data.win_count++;
         players[socket.id] = player_data;
@@ -125,7 +121,7 @@ io.on('connection', function(socket){
           });
         });
       } else { //Normal position update
-        player_data.position = player_coord;
+        player_data.position = (has_died ? the_maze.start : new_tile);
         io.emit('player_update', player_data);
         players[socket.id] = player_data;
       }

@@ -45,13 +45,17 @@ function mazeObj(settings) {
   }
   if (_.isUndefined(settings.end)) {
     this.end = this.get_random_edge();
-    while (this.end.x == this.start.x && this.end.y == this.start.y) {
+    while (this.dist_between(this.end, this.start) < (this.width + this.height) / 2) {
       this.end = this.get_random_edge();
     }
   } else {
     this.end = settings.end;
   }
   this.generate();
+}
+
+mazeObj.prototype.dist_between = function(tile_a, tile_b) {
+  return Math.abs(tile_a.x - tile_b.x) + Math.abs(tile_a.y - tile_b.y);
 }
 
 mazeObj.prototype.surrounding_tiles = function(tile) {
@@ -329,7 +333,8 @@ mazeObj.prototype.generate_npcs = function(num_npcs) {
       position: this.get_random_hall(),
       name: "maze walker",
       strategy: "not back",
-      hit_box: "self"
+      hit_box: "self",
+      speed: 150
     };
     npcs.push(new npc.npcObj(npc_settings));
   }
@@ -339,7 +344,8 @@ mazeObj.prototype.generate_npcs = function(num_npcs) {
       position: tile,
       name: "wall walker",
       strategy: "always right",
-      hit_box: "surrounding"
+      hit_box: "surrounding",
+      speed: 150
     }));
   });
   return npcs;

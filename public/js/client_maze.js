@@ -125,7 +125,7 @@ clientMaze.prototype.create_bot_div = function(id) {
   $(this.table).append(div);
 }
 
-clientMaze.prototype.update_bots = function(bot) {
+clientMaze.prototype.update_bot = function(bot) {
   var npc_div = $("#bot_" + bot.id);
   if (npc_div.length == 0) {
     this.create_bot_div(bot.id);

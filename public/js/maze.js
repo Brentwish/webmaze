@@ -9,10 +9,10 @@ socket.on('maze_data', function(data) {
 
 socket.on('game_update', function(update) {
   if (_.isNull(maze)) return; //Return if maze has yet to be created
-  _.each(update.updated_players, function(player) {
+  _.each(update.players, function(player) {
     maze.update_player(player.id, player);
   });
-  _.each(update.updated_bots, function(bot) {
+  _.each(update.bots, function(bot) {
     maze.update_bot(bot);
   });
 });

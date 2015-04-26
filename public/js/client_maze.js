@@ -7,7 +7,7 @@ function clientMaze(settings) {
   this.teleport_tiles = settings.maze.teleport_tiles;
   this.players = {};
   this.npcs = settings.npcs;
-  _.each(settings.player_data, function(player, id) {
+  _.each(settings.players, function(player, id) {
     this.players[id] = new clientPlayer(player);
   }, this);
   this.teleport_colors = ["red", "orange", "yellow", "green", "blue", "purple"]; 

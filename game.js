@@ -9,8 +9,8 @@ function game(settings) {
   this.num_npcs = settings.num_npcs;
   this.game_tick_length = settings.game_tick_length;
   this.players = {};
-  this.npcs = [];
-  this.maze = this.create_maze();
+  this.create_maze();
+  this.is_over = false;
 }
 
 game.prototype.create_maze = function(start, end) {
@@ -21,7 +21,7 @@ game.prototype.create_maze = function(start, end) {
     start: start,
     end: end
   });
-  this.npcs = this.generate_npcs(this.maze, this.num_npcs);
+  this.generate_npcs(this.maze, this.num_npcs);
 }
 
 game.prototype.game_tick = function() {
@@ -43,22 +43,23 @@ game.prototype.game_tick = function() {
         if (is_dead) {
           player_data.position = this.maze.start;
           this.players[player_id] = player_data;
-          updated_players.push(players.player_id);
+          updated_players.push(player_data);
         }
       }, this);
       npc.update_position(next_move);
-      updated_bots.push(npc);
+      updated_bots.push(npc.to_data_hash());
     } else {
       npc.move_timer += this.game_tick_length;
     }
   }, this);
-  return {bots: updated_bots, players: updated_players};
+  return { bots: updated_bots, players: updated_players };
 }
 
 game.prototype.generate_npcs = function() {
+  this.npcs = [];
   var i = 0;
   var walls_at_end = this.maze.surrounding_walls(this.maze.end);
-  for (i = 0; i < this.num_npcs - walls_at_end.length; i++) {
+  for (i; i < this.num_npcs - walls_at_end.length; i++) {
     var npc_settings = {
       id: i,
       position: this.maze.get_random_hall(),
@@ -94,20 +95,19 @@ game.prototype.is_valid_move = function(from, to) {
   return is_hall && (is_valid_x || is_valid_y || is_teleport_pair);
 }
 
-game.prototype.add_player = function(player, id) {
-  this.players[id] = player;
-}
-
-game.prototype.is_over = function() {
-  return _.any(this.players, function(player) {
-    return player.position.same_coords(this.maze.end)
-  }, this);
+game.prototype.add_player = function(player) {
+  var player_settings = {
+    win_count: 0,
+    position: this.maze.start,
+    id: player.id
+  }
+  this.players[player.id] = player_settings;
 }
 
 game.prototype.handle_player_update = function(player_coord, id) {
   var player_data = this.players[id];
   var new_tile = this.maze.tile_at(player_coord.x, player_coord.y);
-
+  var updates = {};
   //If we have a valid move
   if (!_.isNull(new_tile) && this.is_valid_move(player_data.position, new_tile)) {
 
@@ -121,21 +121,37 @@ game.prototype.handle_player_update = function(player_coord, id) {
       player_data.win_count++;
       this.players[id] = player_data;
 
-      //Regenerate the maze
-      this.maze = this.create_maze(this.maze.get_opposite_tile(this.maze.end))
-      this.npcs = this.generate_npcs(this.num_npcs);
-
-      //Reset the player data
-      _.each(this.players, function(player_data, player_id) {
-        player_data.position = this.maze.start;
-        this.players[id] = player_data;
-      }, this);
-
+      //Flag the game as being over
+      this.is_over = true;
     } else { //Normal position update
       player_data.position = (has_died ? this.maze.start : new_tile);
       this.players[id] = player_data;
+      updates["player_data"] = player_data;
     }
   }
+  return updates;
+}
+
+game.prototype.to_data_hash = function(current_player_id) {
+  return {
+    maze: this.maze,
+    players: this.players,
+    npcs: _.map(this.npcs, function(npc) { return npc.to_data_hash(); }),
+    id: current_player_id
+  }
+}
+
+game.prototype.reset_game = function() {
+  //Regenerate the maze
+  this.create_maze(this.maze.get_opposite_tile(this.maze.end))
+
+  //Reset the player data
+  _.each(this.players, function(player_data, player_id) {
+    player_data.position = this.maze.start;
+    this.players[player_id] = player_data;
+  }, this);
+
+  this.is_over = false;
 }
 
 exports.game = game;

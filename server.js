@@ -10,18 +10,18 @@ var _ = require('./public/js/underscore-min.js');
 var server_port = (process.env.PORT || 3000);
 
 var game_settings = {
-  maze_size_x: 10,
-  maze_size_y: 15,
+  maze_size_x: 8,
+  maze_size_y: 8,
   num_teleporters: 6,
-  num_npcs: 10,
+  num_npcs: 4,
   game_tick_length: 20
 };
 
 var the_game = new game.game(game_settings);
 
 function game_update() {
-  var update = the_game.game_tick(the_game.game_tick_length);
-  if(_.any(update, function(v) { return !_.isEmpty(v); })) {
+  var update = the_game.game_tick();
+  if (_.any(update, function(v) { return !_.isEmpty(v); })) {
     io.emit('game_update', update);
   }
 }
@@ -39,31 +39,25 @@ app.get('/maze/', function(req, res) {
 });
 
 io.on('connection', function(socket) {
-  the_game.add_player({
-    id: socket.id,
-    win_count: 0,
-    position: the_game.maze.start
-  }, socket.id);
+  //Add the player to the game
+  the_game.add_player({ id: socket.id });
 
-  socket.emit('maze_data', {
-    maze: the_game.maze,
-    player_data: the_game.players,
-    npcs: the_game.npcs,
-    id: socket.id
-  });
+  //Send the maze to the new player
+  socket.emit('maze_data', the_game.to_data_hash(socket.id));
+  
+  //Let everyone else know about the new player
   io.emit('player_update', the_game.players[socket.id]);
-  socket.on('coord_update', function(player_coord) {
-    the_game.handle_player_update(player_coord, socket.id);
-    io.emit('player_update', the_game.players[socket.id]);
 
-    if (the_game.is_over()) {
-      the_game.reset_game(game_settings);
-      io.emit('maze_data', {
-        maze: the_game.maze,
-        player_data: the_game.players,
-        npcs: the_game.npcs,
-        id: socket.id
-      });
+
+  socket.on('coord_update', function(player_coord) {
+    var updates = the_game.handle_player_update(player_coord, socket.id);
+    if (!_.isEmpty(updates)) {
+      io.emit('player_update', updates["player_data"]);
+    }
+
+    if (the_game.is_over) {
+      the_game.reset_game();
+      io.emit('maze_data', the_game.to_data_hash(socket.id));
     }
   });
 

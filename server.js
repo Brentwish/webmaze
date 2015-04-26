@@ -42,7 +42,7 @@ io.on('connection', function(socket) {
   the_game.add_player({
     id: socket.id,
     win_count: 0,
-    position: the_game.start
+    position: the_game.maze.start
   }, socket.id);
 
   socket.emit('maze_data', {

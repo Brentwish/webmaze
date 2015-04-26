@@ -1,5 +1,6 @@
 var _ = require('underscore');
 var npc = require('./npc.js');
+var game = require('./game.js');
 
 function tileObj(x, y, val) {
   this.x = x;

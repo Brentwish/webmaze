@@ -25,15 +25,13 @@ game.prototype.create_maze = function(start, end) {
 }
 
 game.prototype.is_tile_lethal = function(tile) {
-  var is_lethal = false;
-  _.each(this.npcs, function(npc) {
+  return _.any(this.npcs, function(npc) {
     if (npc.hit_box == "self") {
-      is_lethal = tile.same_coords(npc.position);
+      return tile.same_coords(npc.position);
     } else if (npc.hit_box == "surrounding") {
-      is_lethal = _.contains(this.maze.adjacent_tiles(npc.position), tile);
+      return _.contains(this.maze.adjacent_tiles(npc.position), tile);
     }
   }, this);
-  return is_lethal;
 }
 
 game.prototype.get_dead_players = function() {

@@ -4,7 +4,6 @@ var http = require('http').Server(app);
 var io = require('socket.io')(http);
 var game = require('./game.js');
 var game_room = require('./game_room.js');
-var randomstring = require("randomstring");
 var _ = require('./public/js/underscore-min.js');
 
 var server_port = (process.env.PORT || 3000);
@@ -35,7 +34,7 @@ io.on('connection', function(socket) {
   var room = _.find(game_rooms, function(room) { return room.has_room(); });
   if (!room) {
     console.log("no open rooms. making a new one");
-    room = new game_room.game_room({ name: "harg", io: io, id: randomstring.generate() });
+    room = new game_room.game_room({ name: "harg", io: io });
     game_rooms.push(room);
   }
   console.log("calling add player for: " + socket.id);

@@ -1,5 +1,6 @@
 var _ = require('underscore');
 var game = require('./game.js');
+var randomstring = require("randomstring");
 
 function gameRoom(settings) {
   this.game_settings = {
@@ -11,7 +12,7 @@ function gameRoom(settings) {
   };
 
   this.game = new game.game(this.game_settings);
-  this.id = settings.id;
+  this.id = randomstring.generate();
   this.name = settings.name;
   this.io = settings.io;
   this.max_players = 2;

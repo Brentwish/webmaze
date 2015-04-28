@@ -104,6 +104,10 @@ game.prototype.add_player = function(player) {
   this.players[player.id] = player_settings;
 }
 
+game.prototype.remove_player = function(id) {
+  delete this.players[id];
+}
+
 game.prototype.handle_player_update = function(player_coord, id) {
   var player_data = this.players[id];
   var new_tile = this.maze.tile_at(player_coord.x, player_coord.y);

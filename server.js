@@ -10,10 +10,10 @@ var _ = require('./public/js/underscore-min.js');
 var server_port = (process.env.PORT || 3000);
 
 var game_settings = {
-  maze_size_x: 20,
-  maze_size_y: 5,
+  maze_size_x: 55,
+  maze_size_y: 25,
   num_teleporters: 6,
-  num_npcs: 2,
+  num_npcs: 18,
   game_tick_length: 20
 };
 

@@ -25,13 +25,17 @@ game.prototype.create_maze = function(start, end) {
 }
 
 game.prototype.is_tile_lethal = function(tile) {
-  return _.any(this.npcs, function(npc) {
-    if (npc.hit_box == "self") {
-      return tile.same_coords(npc.position);
-    } else if (npc.hit_box == "surrounding") {
-      return _.contains(this.maze.adjacent_tiles(npc.position), tile);
-    }
-  }, this);
+  if (tile.same_coords(this.maze.start)) {
+    return false;
+  } else {
+    return _.any(this.npcs, function(npc) {
+      if (npc.hit_box == "self") {
+        return tile.same_coords(npc.position);
+      } else if (npc.hit_box == "surrounding") {
+        return _.contains(this.maze.adjacent_tiles(npc.position), tile);
+      }
+    }, this);
+  }
 }
 
 game.prototype.get_dead_players = function() {
@@ -39,6 +43,7 @@ game.prototype.get_dead_players = function() {
   _.each(this.players, function(player, id) {
     if (this.is_tile_lethal(player.position)) {
       player.position = this.maze.start;
+      player.death_count++;
       this.players[id] = player;
       updated_players.push(player);
     }
@@ -104,6 +109,7 @@ game.prototype.is_valid_move = function(from, to) {
 game.prototype.add_player = function(player) {
   var player_settings = {
     win_count: 0,
+    death_count: 0,
     position: this.maze.start,
     id: player.id
   }
@@ -129,6 +135,7 @@ game.prototype.handle_player_update = function(player_coord, id) {
       this.is_over = true;
     } else { //Normal position update
       player_data.position = (has_died ? this.maze.start : new_tile);
+      player_data.death_count = (has_died ? player_data.death_count++ : player_data.death_count);
       this.players[id] = player_data;
       updates["player_data"] = player_data;
     }

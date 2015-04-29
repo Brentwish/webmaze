@@ -138,12 +138,11 @@ game.prototype.handle_player_update = function(player_coord, id) {
   return updates;
 }
 
-game.prototype.to_data_hash = function(current_player_id) {
+game.prototype.to_data_hash = function() {
   return {
     maze: this.maze,
     players: this.players,
-    npcs: _.map(this.npcs, function(npc) { return npc.to_data_hash(); }),
-    id: current_player_id
+    npcs: _.map(this.npcs, function(npc) { return npc.to_data_hash(); })
   }
 }
 

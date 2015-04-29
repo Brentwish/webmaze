@@ -53,7 +53,7 @@ gameRoom.prototype.join = function(player_socket) {
   this.game.add_player({ id: player_socket.id });
 
   //Send the maze to the new player
-  player_socket.emit('maze_data', this.game.to_data_hash(player_socket.id));
+  player_socket.emit('maze_data', this.game.to_data_hash());
 
   //Let everyone else know about the new player
   this.broadcast_room('player_update', this.game.players[player_socket.id]);
@@ -67,7 +67,7 @@ gameRoom.prototype.join = function(player_socket) {
 
     if (this.game.is_over) {
       this.game.reset_game();
-      this.broadcast_room('maze_data', this.game.to_data_hash(player_socket.id));
+      this.broadcast_room('maze_data', this.game.to_data_hash());
     }
   }.bind(this));
 

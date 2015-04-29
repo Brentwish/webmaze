@@ -1,6 +1,6 @@
 function clientMaze(settings) {
   this.table = settings.table;
-  this.player_id = settings.id;
+  this.player_id = socket.id;
   this.width = settings.maze.width;
   this.height = settings.maze.height;
   this.maze = settings.maze.maze;
@@ -10,7 +10,7 @@ function clientMaze(settings) {
   _.each(settings.players, function(player, id) {
     this.players[id] = new clientPlayer(player);
   }, this);
-  this.teleport_colors = ["red", "orange", "yellow", "green", "blue", "purple"]; 
+  this.teleport_colors = ["red", "orange", "yellow", "green", "blue", "purple"];
 }
 
 clientMaze.prototype.draw_teleports = function() {

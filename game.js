@@ -59,7 +59,19 @@ game.prototype.generate_npcs = function() {
   this.npcs = [];
   var i = 0;
   var walls_at_end = this.maze.surrounding_walls(this.maze.end);
-  for (i; i < this.num_npcs - walls_at_end.length; i++) {
+  _.each(walls_at_end, function(tile) {
+    if (i < this.num_npcs) {
+      this.npcs.push(new npc.npcObj({
+        id: i++,
+        position: tile,
+        name: "wall walker",
+        strategy: "always right",
+        hit_box: "surrounding",
+        speed: 150
+      }));
+    }
+  }, this);
+  for (i; i < this.num_npcs; i++) {
     var npc_settings = {
       id: i,
       position: this.maze.get_random_hall(),
@@ -70,16 +82,6 @@ game.prototype.generate_npcs = function() {
     };
     this.npcs.push(new npc.npcObj(npc_settings));
   }
-  _.each(walls_at_end, function(tile) {
-    this.npcs.push(new npc.npcObj({
-      id: i++,
-      position: tile,
-      name: "wall walker",
-      strategy: "always right",
-      hit_box: "surrounding",
-      speed: 150
-    }));
-  }, this);
 }
 
 game.prototype.is_valid_move = function(from, to) {

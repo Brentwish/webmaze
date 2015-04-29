@@ -74,6 +74,21 @@ mazeObj.prototype.surrounding_tiles = function(tile) {
   return sur_tiles;
 }
 
+mazeObj.prototype.adjacent_tiles = function(tile) {
+  var x = tile.x;
+  var y = tile.y;
+  var adj_tiles = this.surrounding_tiles(tile);
+  if (x != 0 && y != 0)
+    adj_tiles.push(this.tile_at(x - 1, y - 1));
+  if (x != 0 && y != this.height - 1)
+    adj_tiles.push(this.tile_at(x - 1, y + 1));
+  if (x != this.width - 1 && y != 0)
+    adj_tiles.push(this.tile_at(x + 1, y - 1));
+  if (x != this.width - 1 && y != this.height - 1)
+    adj_tiles.push(this.tile_at(x + 1, y + 1));
+  return adj_tiles;
+}
+
 mazeObj.prototype.get_touching_count = function(tile) {
   return  _.reduce(this.surrounding_tiles(tile), function(m, t) {
     return m + t.val;

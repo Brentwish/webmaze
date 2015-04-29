@@ -24,35 +24,41 @@ game.prototype.create_maze = function(start, end) {
   this.generate_npcs(this.maze, this.num_npcs);
 }
 
+game.prototype.is_tile_lethal = function(tile) {
+  return _.any(this.npcs, function(npc) {
+    if (npc.hit_box == "self") {
+      return tile.same_coords(npc.position);
+    } else if (npc.hit_box == "surrounding") {
+      return _.contains(this.maze.adjacent_tiles(npc.position), tile);
+    }
+  }, this);
+}
+
+game.prototype.get_dead_players = function() {
+  var updated_players = [];
+  _.each(this.players, function(player, id) {
+    if (this.is_tile_lethal(player.position)) {
+      player.position = this.maze.start;
+      this.players[id] = player;
+      updated_players.push(player);
+    }
+  }, this);
+  return updated_players;
+}
+
 game.prototype.game_tick = function() {
   var updated_bots = [];
-  var updated_players = [];
   _.each(this.npcs, function(npc) {
     if (npc.should_move()) {
       npc.move_timer = 0;
       var next_move = npc.get_next_move(this.maze);
-      _.each(this.players, function(player_data, player_id) {
-        var is_dead = false;
-        if (npc.hit_box == "self") {
-          is_dead = player_data.position.same_coords(next_move);
-        } else if (npc.hit_box == "surrounding") {
-          is_dead = _.any(this.maze.surrounding_tiles(next_move), function(tile) {
-            return player_data.position.same_coords(tile);
-          }, this) || player_data.position.same_coords(next_move);
-        }
-        if (is_dead) {
-          player_data.position = this.maze.start;
-          this.players[player_id] = player_data;
-          updated_players.push(player_data);
-        }
-      }, this);
       npc.update_position(next_move);
       updated_bots.push(npc.to_data_hash());
     } else {
       npc.move_timer += this.game_tick_length;
     }
   }, this);
-  return { bots: updated_bots, players: updated_players };
+  return { bots: updated_bots, players: this.get_dead_players() };
 }
 
 game.prototype.generate_npcs = function() {
@@ -117,9 +123,7 @@ game.prototype.handle_player_update = function(player_coord, id) {
   //If we have a valid move
   if (!_.isNull(new_tile) && this.is_valid_move(player_data.position, new_tile)) {
 
-    var has_died = _.any(this.npcs, function(npc) {
-      return new_tile.same_coords(npc.position);
-    }, this);
+    var has_died = this.is_tile_lethal(new_tile);
 
     //If the new move is the winning move
     if (!has_died && new_tile.same_coords(this.maze.end)) {

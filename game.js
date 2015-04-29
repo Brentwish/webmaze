@@ -135,7 +135,7 @@ game.prototype.handle_player_update = function(player_coord, id) {
       this.is_over = true;
     } else { //Normal position update
       player_data.position = (has_died ? this.maze.start : new_tile);
-      player_data.death_count = (has_died ? player_data.death_count++ : player_data.death_count);
+      if (has_died) player_data.death_count++;
       this.players[id] = player_data;
       updates["player_data"] = player_data;
     }

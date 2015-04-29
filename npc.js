@@ -39,6 +39,14 @@ npcObj.prototype.update_position = function(next_move) {
   this.position = next_move;
 }
 
+npcObj.prototype.to_data_hash = function() {
+  return {
+    id: this.id,
+    name: this.name,
+    position: this.position
+  };
+}
+
 npcObj.prototype.npc_strategies = {
   "not back": function(maze, npc) {
     var facing_tile = maze.get_facing_tile(npc.position, npc.direction);

@@ -1,16 +1,16 @@
 function clientMaze(settings) {
   this.table = settings.table;
-  this.player_id = settings.id;
+  this.player_id = socket.id;
   this.width = settings.maze.width;
   this.height = settings.maze.height;
   this.maze = settings.maze.maze;
   this.teleport_tiles = settings.maze.teleport_tiles;
   this.players = {};
   this.npcs = settings.npcs;
-  _.each(settings.player_data, function(player, id) {
+  _.each(settings.players, function(player, id) {
     this.players[id] = new clientPlayer(player);
   }, this);
-  this.teleport_colors = ["red", "orange", "yellow", "green", "blue", "purple"]; 
+  this.teleport_colors = ["red", "orange", "yellow", "green", "blue", "purple"];
 }
 
 clientMaze.prototype.draw_teleports = function() {
@@ -66,6 +66,9 @@ clientMaze.prototype.draw_maze = function() {
   _.each(this.players, function(player, id) {
     this.create_player_div(id);
   }, this);
+
+  //Create maze footer
+  $("#maze_footer").width(this.width * 20);
 }
 
 clientMaze.prototype.update_player = function(id, data) {
@@ -75,8 +78,10 @@ clientMaze.prototype.update_player = function(id, data) {
     this.create_player_div(id);
   } else {
     player.win_count = data.win_count;
+    player.death_count = data.death_count;
     player.update_position(data.position);
     this.update_player_position(id);
+    this.update_death_count(id);
   }
 }
 
@@ -125,7 +130,7 @@ clientMaze.prototype.create_bot_div = function(id) {
   $(this.table).append(div);
 }
 
-clientMaze.prototype.update_bots = function(bot) {
+clientMaze.prototype.update_bot = function(bot) {
   var npc_div = $("#bot_" + bot.id);
   if (npc_div.length == 0) {
     this.create_bot_div(bot.id);
@@ -149,6 +154,12 @@ clientMaze.prototype.update_entity = function(entity, position, padding) {
     top: tile_pos.top + padding,
     left: tile_pos.left + padding
   });
+}
+
+clientMaze.prototype.update_death_count = function(id) {
+  var death_count = $('#death_count');
+  var player = this.players[id];
+  death_count.text(String(player.death_count));
 }
 
 clientMaze.prototype.attempt_move = function(dir) {

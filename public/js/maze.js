@@ -7,14 +7,19 @@ socket.on('maze_data', function(data) {
   maze.draw_maze();
 });
 
+socket.on('game_update', function(update) {
+  if (_.isNull(maze)) return; //Return if maze has yet to be created
+  _.each(update.players, function(player) {
+    maze.update_player(player.id, player);
+  });
+  _.each(update.bots, function(bot) {
+    maze.update_bot(bot);
+  });
+});
+
 socket.on('player_update', function(data) {
   if (_.isNull(maze)) return; //Return if maze has yet to be created
   maze.update_player(data.id, data);
-});
-
-socket.on('npc_update', function(bot) {
-  if (_.isNull(maze)) return; //Return if maze has yet to be created
-  maze.update_bots(bot);
 });
 
 socket.on('player_disconnect', function(data) {

@@ -1,5 +1,6 @@
 var _ = require('underscore');
 var npc = require('./npc.js');
+var game = require('./game.js');
 
 function tileObj(x, y, val) {
   this.x = x;
@@ -71,6 +72,21 @@ mazeObj.prototype.surrounding_tiles = function(tile) {
   if (y != this.height - 1)
     sur_tiles.push(this.maze[y + 1][x]);
   return sur_tiles;
+}
+
+mazeObj.prototype.adjacent_tiles = function(tile) {
+  var x = tile.x;
+  var y = tile.y;
+  var adj_tiles = this.surrounding_tiles(tile);
+  if (x != 0 && y != 0)
+    adj_tiles.push(this.tile_at(x - 1, y - 1));
+  if (x != 0 && y != this.height - 1)
+    adj_tiles.push(this.tile_at(x - 1, y + 1));
+  if (x != this.width - 1 && y != 0)
+    adj_tiles.push(this.tile_at(x + 1, y - 1));
+  if (x != this.width - 1 && y != this.height - 1)
+    adj_tiles.push(this.tile_at(x + 1, y + 1));
+  return adj_tiles;
 }
 
 mazeObj.prototype.get_touching_count = function(tile) {
@@ -255,18 +271,6 @@ mazeObj.prototype.generate = function() {
   }
 }
 
-mazeObj.prototype.is_valid_move = function(from, to) {
-  var is_in_bounds = to.x >= 0 && to.y >= 0 && to.x < this.width && to.y < this.height;
-  var is_valid_x = Math.abs(from.x - to.x) == 1 && Math.abs(from.y - to.y) == 0;
-  var is_valid_y = Math.abs(from.x - to.x) == 0 && Math.abs(from.y - to.y) == 1;
-  var is_hall = is_in_bounds ? this.maze[to.y][to.x].val == 1 : false;
-  var is_teleport_pair = _.any(this.teleport_tiles, function(pair) {
-    return (pair[0].same_coords(to) && pair[1].same_coords(from)) ||
-            (pair[0].same_coords(from) && pair[1].same_coords(to));
-  });
-
-  return is_hall && (is_valid_x || is_valid_y || is_teleport_pair);
-}
 
 mazeObj.prototype.print = function() {
   return _.reduce(this.maze, function(m, row) {
@@ -323,34 +327,6 @@ mazeObj.prototype.get_random_hall = function() {
   return _.sample(this.all_halls());
 }
 
-mazeObj.prototype.generate_npcs = function(num_npcs) {
-  var npcs = [];
-  var i = 0;
-  var walls_at_end = this.surrounding_walls(this.end);
-  for (i = 0; i < num_npcs - walls_at_end.length; i++) {
-    var npc_settings = {
-      id: i,
-      position: this.get_random_hall(),
-      name: "maze walker",
-      strategy: "not back",
-      hit_box: "self",
-      speed: 150
-    };
-    npcs.push(new npc.npcObj(npc_settings));
-  }
-  _.each(walls_at_end, function(tile) {
-    npcs.push(new npc.npcObj({
-      id: i++,
-      position: tile,
-      name: "wall walker",
-      strategy: "always right",
-      hit_box: "surrounding",
-      speed: 150
-    }));
-  });
-  return npcs;
-  //return an array of bot objects
-}
 
 mazeObj.prototype.tile_at = function(x, y) {
   if (x >= 0 && x < this.width && y >= 0 && y < this.height) {

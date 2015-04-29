@@ -6,7 +6,15 @@
       * { margin: 0; padding: 0; box-sizing: border-box; }
       body { font: 13px Helvetica, Arial; }
       form { background: #000; padding: 3px; position: fixed; bottom: 0; width: 100%; }
-      #maze_table { border-spacing: 0px; position: absolute; }
+      #maze_table { border-spacing: 0px; }
+      #maze_footer {
+        border-spacing: 0px;
+        background-color: darkslategrey;
+        text-align: center;
+        vertical-align: middle;
+        display: table-cell;
+        height: 33px;
+      }
       .wall { width: 20px; height: 20px; background-color: gray; }
       .hall { width: 20px; height: 20px; background-color: white; }
       .board_entity {
@@ -47,14 +55,25 @@
         z-index: 3;
         transition: all 0.30s;
       }
+      .death_count {
+        color: white;
+        font-weight: 500;
+        line-height: 27px;
+        display: inline-block;
+        text-align: center;
+      }
     </style>
   </head>
   <body>
     <div>
       <table id="maze_table"><table/>
     </div>
-    <script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
-    <script src="http://code.jquery.com/jquery-1.11.1.js"></script>
+    <div id="maze_footer">
+      <span class="death_count">Deaths: </span>
+      <span id="death_count" class="death_count">0</span>
+    </div>
+    <script src="public/js/jquery-1.11.2.min.js"></script>
+    <script src="public/js/socket.io.js"></script>
     <script src="public/js/underscore-min.js" type="text/javascript"></script>
     <script src="public/js/maze.js" type="text/javascript"></script>
     <script src="public/js/client_maze.js" type="text/javascript"></script>

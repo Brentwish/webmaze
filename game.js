@@ -78,6 +78,7 @@ game.prototype.generate_npcs = function() {
         name: "wall walker",
         strategy: "always right",
         hit_box: "surrounding",
+        direction: this.maze.dir_from_tile_to_tile(this.maze.end, tile),
         speed: 150
       }));
     }

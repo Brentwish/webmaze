@@ -6,7 +6,7 @@ function npcObj(settings) {
   this.name = settings.name;
   this.hit_box = settings.hit_box;
   this.position = settings.position;
-  this.direction = 'left';
+  this.direction = settings.direction || 'left';
   this.last_position = settings.position;
   this.id = settings.id;
   this.speed = settings.speed;

@@ -361,4 +361,23 @@ mazeObj.prototype.get_relative_right = function(dir) {
   return "right";
 }
 
+mazeObj.prototype.dir_from_tile_to_tile = function(from, to) {
+  var x = to.x - from.x;
+  var y = to.y - from.y;
+  if (Math.abs(x) > Math.abs(y)) {
+    if (x > 0) {
+      return "right";
+    } else {
+      return "left";
+    }
+  } else {
+    if (y > 0) {
+      return "down";
+    } else {
+      return "up";
+    }
+  }
+  return "left";
+}
+
 exports.mazeObj = mazeObj;
